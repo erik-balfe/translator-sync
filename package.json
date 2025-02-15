@@ -1,10 +1,10 @@
 {
   "name": "fluent-interpreter",
-  "module": "syncTranslations.ts",
+  "module": "src/cli/index.ts",
   "type": "module",
   "scripts": {
-    "test": "bun test",
-    "sync": "bun run syncTranslations.ts"
+    "sync": "bun run src/cli/index.ts",
+    "test": "bun test"
   },
   "devDependencies": {
     "@types/bun": "latest"

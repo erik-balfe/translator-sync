@@ -149,7 +149,7 @@ test("Valid sync: updates translation files correctly", async () => {
     // For multiline value (real_multi_line), compare number of non-empty lines.
     if (key === "real_multi_line") {
       const enLines = enValue.split("\n").filter((l) => l.trim().length > 0);
-      const esLines = esValue
+      const esLines = esValue!
         .replace(/^translated:\s*/, "")
         .split("\n")
         .filter((l) => l.trim().length > 0);
