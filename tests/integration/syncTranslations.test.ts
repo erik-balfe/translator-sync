@@ -1,17 +1,18 @@
 #!/usr/bin/env bun
 import { expect, test } from "bun:test";
-import fs from "fs";
+import fs from "node:fs";
 import path from "path";
 
-// Determine project root from this test file location.
-const projectRoot = new URL(".", import.meta.url).pathname;
+// Determine the project root directory relative to this test file.
+// When this file is at tests/integration/syncTranslations.test.ts, the project root is two directories up.
+const projectRoot = new URL("../../", import.meta.url).pathname;
 console.log("[TEST DEBUG]", new Date().toISOString(), "Project root directory:", projectRoot);
 
-// The folder "fixtures" is a subfolder in your project (in version control).
+// The "fixtures" folder is assumed to be at the project root.
 const fixturesRoot = path.join(projectRoot, "fixtures");
 console.log("[TEST DEBUG]", new Date().toISOString(), "Fixtures root:", fixturesRoot);
 
-// Use a dedicated ".temp" folder (inside project) for tests.
+// Use a dedicated ".temp" folder inside the project root for test runs.
 const tempRoot = path.join(projectRoot, ".temp");
 if (!fs.existsSync(tempRoot)) {
   fs.mkdirSync(tempRoot);
@@ -20,7 +21,7 @@ if (!fs.existsSync(tempRoot)) {
   console.log("[TEST DEBUG]", new Date().toISOString(), ".temp folder exists at:", tempRoot);
 }
 
-// Helper: Create or clear a fresh test folder under .temp for each test.
+// Helper: Create or clear a fresh test folder in .temp for each test.
 function createTestFolder(testName: string): string {
   const folder = path.join(tempRoot, testName);
   if (fs.existsSync(folder)) {
@@ -42,7 +43,7 @@ function createTestFolder(testName: string): string {
   return folder;
 }
 
-// Helper: Copy a fixture subfolder into the test folder.
+// Helper: Copy a fixture subfolder to a destination folder.
 function copyFixture(fixtureSubfolder: string, destFolder: string): void {
   const src = path.join(fixturesRoot, fixtureSubfolder);
   fs.cpSync(src, destFolder, { recursive: true });
@@ -53,16 +54,16 @@ function copyFixture(fixtureSubfolder: string, destFolder: string): void {
   );
 }
 
-// Helper: Run the syncTranslations.ts script on a folder.
-// Returns { stdout, stderr, exitCode }.
+// Helper: Run the CLI script (our sync process) on a target folder.
+// Our CLI entry point is at src/cli/index.ts in the project.
 async function runSyncScript(
   targetFolder: string,
 ): Promise<{ stdout: string; stderr: string; exitCode: number }> {
-  const scriptPath = new URL("./syncTranslations.ts", import.meta.url).pathname;
-  console.log("[TEST DEBUG]", new Date().toISOString(), "Using syncTranslations.ts at:", scriptPath);
+  const cliScriptPath = path.join(projectRoot, "src", "cli", "index.ts");
+  console.log("[TEST DEBUG]", new Date().toISOString(), "Using CLI script at:", cliScriptPath);
 
   const proc = Bun.spawn({
-    cmd: ["bun", "run", scriptPath, "--dev", targetFolder],
+    cmd: ["bun", "run", cliScriptPath, targetFolder],
     cwd: process.cwd(),
     stdout: "pipe",
     stderr: "pipe",
@@ -94,8 +95,13 @@ async function runSyncScript(
 }
 
 /**********************************************************************
- * Helper: Extract key–value pairs from FTL content.
+ * Test Cases
  **********************************************************************/
+
+// Test Case 1: Valid Sync
+// Fixture "valid" contains a complete en.ftl, an empty es.ftl, and a partial ru.ftl.
+// The expected result is that non-English files are updated so for every key,
+// the value equals "translated: " + english value.
 import { parse } from "@fluent/syntax";
 function extractKeyValues(content: string): Map<string, string> {
   const resource = parse(content, {});
@@ -116,20 +122,13 @@ function extractKeyValues(content: string): Map<string, string> {
   return result;
 }
 
-/**********************************************************************
- * Test Case 1: Valid Sync (updated)
- * Fixture "valid" should have a complete en.ftl, empty es.ftl and partial ru.ftl.
- * For every key, the Spanish value should equal "translated: " + english value.
- * For multiline keys (like "real_multi_line"), we also compare the number
- * of non-empty lines.
- **********************************************************************/
 test("Valid sync: updates translation files correctly", async () => {
   const testFolder = createTestFolder("valid-sync");
   copyFixture("valid", testFolder);
   const result = await runSyncScript(testFolder);
   expect(result.exitCode).toBe(0);
 
-  // Read english file (unchanged copy).
+  // Read updated english file (should remain unchanged)
   const englishTestPath = path.join(testFolder, "en.ftl");
   const englishTestContent = fs.readFileSync(englishTestPath, "utf8");
   const englishMap = extractKeyValues(englishTestContent);
@@ -139,14 +138,14 @@ test("Valid sync: updates translation files correctly", async () => {
   const esContent = fs.readFileSync(esFilePath, "utf8");
   const spanishMap = extractKeyValues(esContent);
 
-  // Check same number of keys.
+  // Check same number of keys between english and translated Spanish.
   expect(spanishMap.size).toBe(englishMap.size);
 
-  // Check that for each key, translated value equals "translated: " + english value.
+  // For each key, check that translated value equals "translated: " + english value.
   for (const [key, enValue] of englishMap.entries()) {
     const esValue = spanishMap.get(key);
     expect(esValue).toBe("translated: " + enValue);
-    // For multiline value (real_multi_line), compare number of non-empty lines.
+    // For multiline values, verify the number of nonempty lines match.
     if (key === "real_multi_line") {
       const enLines = enValue.split("\n").filter((l) => l.trim().length > 0);
       const esLines = esValue!
@@ -156,17 +155,13 @@ test("Valid sync: updates translation files correctly", async () => {
       expect(esLines.length).toBe(enLines.length);
     }
   }
-
-  // Additionally check substrings.
+  // Additionally, verify some expected substrings.
   expect(esContent).toContain("hello = translated: Hello my friends, how are you?");
   expect(esContent).toContain("greeting = translated: Hello friends!");
 });
 
-/**********************************************************************
- * Test Case 2: Missing en.ftl
- * Fixture "missing-en" does not contain an en.ftl file.
- * Expected: script exits with error.
- **********************************************************************/
+// Test Case 2: Missing en.ftl
+// Fixture "missing-en" does not have an en.ftl file, so the CLI should exit with error.
 test("Missing en.ftl: exits with error", async () => {
   const testFolder = createTestFolder("missing-en");
   copyFixture("missing-en", testFolder);
@@ -174,11 +169,9 @@ test("Missing en.ftl: exits with error", async () => {
   expect(result.exitCode).not.toBe(0);
 });
 
-/**********************************************************************
- * Test Case 3: Malformed en.ftl
- * Fixture "malformed" has en.ftl with invalid FTL content.
- * Expected: script exits with error.
- **********************************************************************/
+// Test Case 3: Malformed en.ftl
+// Fixture "malformed" contains an invalid en.ftl,
+// so the CLI should exit with error.
 test("Malformed en.ftl: exits with error", async () => {
   const testFolder = createTestFolder("malformed");
   copyFixture("malformed", testFolder);
@@ -186,11 +179,8 @@ test("Malformed en.ftl: exits with error", async () => {
   expect(result.exitCode).not.toBe(0);
 });
 
-/**********************************************************************
- * Test Case 4: Extraneous keys removed
- * Fixture "extraneous" contains extra keys in non-English files that
- * should be removed from the updated file.
- **********************************************************************/
+// Test Case 4: Extraneous keys
+// Fixture "extraneous" contains extra keys in a non-English file that should be removed.
 test("Extraneous keys: extra keys removed", async () => {
   const testFolder = createTestFolder("extraneous");
   copyFixture("extraneous", testFolder);
@@ -202,11 +192,8 @@ test("Extraneous keys: extra keys removed", async () => {
   expect(esContent).not.toContain("unused_key");
 });
 
-/**********************************************************************
- * Test Case 5: Non-FTL files ignored
- * Fixture "non-ftl" contains files with other extensions.
- * Those files should remain unchanged.
- **********************************************************************/
+// Test Case 5: Non-FTL files
+// Fixture "non-ftl" contains files with other extensions; these should remain unchanged.
 test("Non-FTL files: ignored by sync", async () => {
   const testFolder = createTestFolder("non-ftl");
   copyFixture("non-ftl", testFolder);
@@ -223,11 +210,8 @@ test("Non-FTL files: ignored by sync", async () => {
   expect(currentContent).toBe(originalContent);
 });
 
-/**********************************************************************
- * Test Case 6: Empty directory
- * Provide an empty folder.
- * Expected: script exits with error.
- **********************************************************************/
+// Test Case 6: Empty directory
+// Providing an empty folder should cause the CLI to exit with an error.
 test("Empty directory: exits with error", async () => {
   const testFolder = createTestFolder("empty-dir");
   const result = await runSyncScript(testFolder);
