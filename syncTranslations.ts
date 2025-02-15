@@ -3,7 +3,7 @@ import { parse } from "@fluent/syntax";
 import fs from "fs";
 import path from "path";
 
-// Log the received arguments and cwd.
+// Log received args and current working directory.
 console.log("[DEBUG]", new Date().toISOString(), "Process args:", process.argv.slice(2));
 console.log("[DEBUG]", new Date().toISOString(), "Current working directory:", process.cwd());
 
@@ -45,7 +45,14 @@ function parseFTLContent(content: string): Map<string, string> {
 function serializeFTLContent(translations: Map<string, string>): string {
   let output = "";
   for (const [key, value] of translations) {
-    output += `${key} = ${value}\n`;
+    if (value.includes("\n")) {
+      // Format as Fluent multiline: write key =, then indent each line.
+      const lines = value.split("\n");
+      const indented = lines.map((line) => line.trimEnd()).join("\n    ");
+      output += `${key} =\n    ${indented}\n`;
+    } else {
+      output += `${key} = ${value}\n`;
+    }
   }
   return output;
 }
@@ -75,7 +82,7 @@ async function processTranslationFile(
     debugLog("Read file:", filePath, "Content length:", content.length);
     const langTranslations = parseFTLContent(content);
 
-    // Identify keys missing in the translation file.
+    // Identify missing keys.
     const missingKeys: string[] = [];
     for (const key of englishTranslations.keys()) {
       if (!langTranslations.has(key)) {
@@ -84,9 +91,8 @@ async function processTranslationFile(
     }
     debugLog("File:", path.basename(filePath), "Missing keys count:", missingKeys.length);
 
-    // Get unique English texts for missing keys.
+    // Gather unique English texts for missing keys.
     const textsToTranslate = Array.from(new Set(missingKeys.map((key) => englishTranslations.get(key)!)));
-
     let translationMap = new Map<string, string>();
     if (textsToTranslate.length > 0) {
       translationMap = await translateBatch("en", targetLang, textsToTranslate);
@@ -130,14 +136,14 @@ async function processDirectory(dirPath: string): Promise<void> {
     debugLog("Read English file:", englishFilePath, "Content length:", englishContent.length);
     const englishTranslations = parseFTLContent(englishContent);
 
-    // Exit with error if no keys are found.
+    // Abort if no keys found.
     if (englishTranslations.size === 0) {
       console.error("[ERROR]", new Date().toISOString(), "No keys found in en.ftl. Aborting.");
       process.exit(1);
     }
     debugLog("English file loaded with keys:", englishTranslations.size);
 
-    // Process all translation files (excluding en.ftl).
+    // Process all non-English translation files.
     for (const file of files) {
       if (file === "en.ftl") continue;
       const filePath = path.join(dirPath, file);
@@ -158,7 +164,7 @@ async function main() {
       console.error("Usage: bun syncTranslations.ts [--dev] <path_to_ftl_directory>");
       process.exit(1);
     }
-    // Use the first non-flag argument as directory path.
+    // Get first non-flag argument.
     const dirPath = args.find((arg) => !arg.startsWith("--"));
     if (!dirPath) {
       console.error("No directory provided.");
