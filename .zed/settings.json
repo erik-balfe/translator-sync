@@ -1,0 +1,50 @@
+{
+  // Language-specific settings for TS and JS
+  "languages": {
+    "TypeScript": {
+      // Use the typescript-language-server as primary and disable vtsls
+      "language_servers": ["typescript-language-server", "!vtsls", "..."],
+      "inlay_hints": {
+        "enabled": false,
+        "show_type_hints": true,
+        "show_parameter_hints": true,
+        "show_other_hints": true
+      },
+      "tab_size": 2,
+      "format_on_save": "on"
+    },
+    "JavaScript": {
+      "language_servers": ["typescript-language-server", "!vtsls", "..."],
+      "inlay_hints": {
+        "enabled": true,
+        "show_type_hints": true,
+        "show_parameter_hints": true,
+        "show_other_hints": true
+      },
+      "tab_size": 2,
+      "format_on_save": "on"
+    }
+  },
+
+  // LSP configuration – here you can pass extra initialization options
+  "lsp": {
+    "typescript-language-server": {
+      "initialization_options": {
+        "preferences": {
+          "strictNullChecks": true,
+          "target": "ES2020"
+        }
+      }
+    },
+    "eslint": {
+      "settings": {
+        "codeActionOnSave": {
+          "rules": ["import/order"]
+        }
+      }
+    }
+  },
+
+  // Global setting to format buffers when saving
+  "format_on_save": "on"
+}
