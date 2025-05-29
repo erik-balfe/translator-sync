@@ -1,18 +1,51 @@
 {
-  "name": "fluent-interpreter",
-  "module": "src/cli/index.ts",
+  "name": "@tyr/translator-sync",
+  "version": "0.1.0",
+  "description": "AI-powered i18n translation file synchronization supporting JSON and Fluent formats",
+  "keywords": ["i18n", "translation", "localization", "react", "vue", "fluent", "openai", "gpt"],
+  "homepage": "https://github.com/erik-balfe/translator-sync",
+  "bugs": "https://github.com/erik-balfe/translator-sync/issues",
+  "license": "MIT",
+  "author": "Erik Balfe",
   "type": "module",
+  "main": "./dist/index.js",
+  "exports": "./dist/index.js",
+  "bin": {
+    "translator-sync": "./dist/cli/translator-sync.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "sync": "bun run src/cli/index.ts",
+    "build": "bun build src/cli/translator-sync.ts --target=node --outdir=dist/cli --format=esm && bun build src/index.ts --target=node --outdir=dist --format=esm",
+    "prepublishOnly": "bun run build",
+    "check": "biome check --write .",
+    "lint": "biome lint --write .",
+    "format": "biome format --write .",
+    "ci": "biome ci .",
     "test": "bun test"
   },
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
-  },
   "dependencies": {
-    "@fluent/syntax": "^0.19.0"
+    "@fluent/syntax": "^0.19.0",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-otlp-http": "^0.26.0",
+    "@opentelemetry/instrumentation-http": "^0.201.1",
+    "@opentelemetry/resources": "^2.0.1",
+    "@opentelemetry/sdk-node": "^0.201.1",
+    "@opentelemetry/semantic-conventions": "^1.34.0",
+    "openai": "^4.103.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/bun": "latest",
+    "@types/node": "^20.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

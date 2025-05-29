@@ -15,6 +15,14 @@ export function parseFTLContent(content: string): Map<string, string> {
         for (const element of entry.value.elements) {
           if (element.type === "TextElement") {
             value += element.value;
+          } else if (element.type === "Placeable") {
+            // Handle variables and other placeables
+            if (element.expression.type === "VariableReference") {
+              value += `{$${element.expression.id.name}}`;
+            } else {
+              // For other placeable types, try to serialize them
+              value += `{${JSON.stringify(element.expression)}}`;
+            }
           }
         }
       }

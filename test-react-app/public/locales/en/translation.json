@@ -1,0 +1,50 @@
+{
+  "common": {
+    "appName": "My React App",
+    "welcome": "Welcome, {{name}}!",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete"
+  },
+  "navigation": {
+    "home": "Home",
+    "about": "About",
+    "contact": "Contact",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "auth": {
+    "login": "Sign In",
+    "register": "Sign Up",
+    "email": "Email address",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "forgotPassword": "Forgot your password?",
+    "rememberMe": "Remember me",
+    "loginSuccess": "Welcome back, {{username}}!",
+    "loginError": "Invalid email or password"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "stats": {
+      "users": "{{count}} users",
+      "revenue": "Revenue: ${{amount}}",
+      "growth": "{{percent}}% growth"
+    },
+    "lastUpdated": "Last updated {{time}} ago"
+  },
+  "errors": {
+    "404": "Page not found",
+    "500": "Internal server error",
+    "network": "Network error. Please check your connection.",
+    "validation": {
+      "required": "This field is required",
+      "email": "Please enter a valid email",
+      "minLength": "Must be at least {{min}} characters"
+    }
+  }
+}

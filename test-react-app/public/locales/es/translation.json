@@ -1,0 +1,50 @@
+{
+  "common": {
+    "appName": "Mi Aplicación React",
+    "welcome": "¡Bienvenido, {{name}}!",
+    "loading": "Cargando...",
+    "error": "translated: Something went wrong",
+    "retry": "translated: Try again",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "translated: Delete"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "about": "Acerca de",
+    "contact": "translated: Contact",
+    "profile": "translated: Profile",
+    "settings": "translated: Settings",
+    "logout": "translated: Logout"
+  },
+  "auth": {
+    "login": "Iniciar Sesión",
+    "register": "translated: Sign Up",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "translated: Confirm password",
+    "forgotPassword": "translated: Forgot your password?",
+    "rememberMe": "translated: Remember me",
+    "loginSuccess": "translated: Welcome back, {{username}}!",
+    "loginError": "translated: Invalid email or password"
+  },
+  "dashboard": {
+    "title": "translated: Dashboard",
+    "stats": {
+      "users": "translated: {{count}} users",
+      "revenue": "translated: Revenue: ${{amount}}",
+      "growth": "translated: {{percent}}% growth"
+    },
+    "lastUpdated": "translated: Last updated {{time}} ago"
+  },
+  "errors": {
+    "404": "translated: Page not found",
+    "500": "translated: Internal server error",
+    "network": "translated: Network error. Please check your connection.",
+    "validation": {
+      "required": "translated: This field is required",
+      "email": "translated: Please enter a valid email",
+      "minLength": "translated: Must be at least {{min}} characters"
+    }
+  }
+}

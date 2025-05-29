@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { expect, test } from "bun:test";
 import fs from "node:fs";
-import path from "path";
+import path from "node:path";
 
 // Determine the project root directory relative to this test file.
 // When this file is at tests/integration/syncTranslations.test.ts, the project root is two directories up.
@@ -67,6 +67,7 @@ async function runSyncScript(
     cwd: process.cwd(),
     stdout: "pipe",
     stderr: "pipe",
+    env: { ...process.env, TRANSLATOR_SERVICE: "mock" },
   });
 
   const stdoutChunks: Uint8Array[] = [];
@@ -144,15 +145,15 @@ test("Valid sync: updates translation files correctly", async () => {
   // For each key, check that translated value equals "translated: " + english value.
   for (const [key, enValue] of englishMap.entries()) {
     const esValue = spanishMap.get(key);
-    expect(esValue).toBe("translated: " + enValue);
+    expect(esValue).toBe(`translated: ${enValue}`);
     // For multiline values, verify the number of nonempty lines match.
     if (key === "real_multi_line") {
       const enLines = enValue.split("\n").filter((l) => l.trim().length > 0);
-      const esLines = esValue!
-        .replace(/^translated:\s*/, "")
+      const esLines = esValue
+        ?.replace(/^translated:\s*/, "")
         .split("\n")
         .filter((l) => l.trim().length > 0);
-      expect(esLines.length).toBe(enLines.length);
+      expect(esLines?.length || 0).toBe(enLines.length);
     }
   }
   // Additionally, verify some expected substrings.
@@ -205,7 +206,10 @@ test("Non-FTL files: ignored by sync", async () => {
   expect(nonFtlFiles.length).toBeGreaterThan(0);
 
   const nonFtlFilePath = path.join(testFolder, nonFtlFiles[0]);
-  const originalContent = fs.readFileSync(path.join(fixturesRoot, "non-ftl", nonFtlFiles[0]), "utf8");
+  const originalContent = fs.readFileSync(
+    path.join(fixturesRoot, "non-ftl", nonFtlFiles[0]),
+    "utf8",
+  );
   const currentContent = fs.readFileSync(nonFtlFilePath, "utf8");
   expect(currentContent).toBe(originalContent);
 });

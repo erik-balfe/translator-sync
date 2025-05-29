@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "provider": "openai",
+  "model": "gpt-4o-mini",
+  "primaryLanguage": "en",
+  "directories": ["./locales", "./public/locales"],
+  "filePattern": "translation.json",
+  "options": {
+    "preserveFormatting": true,
+    "costWarningThreshold": 1.00,
+    "maxConcurrentRequests": 3
+  }
+}

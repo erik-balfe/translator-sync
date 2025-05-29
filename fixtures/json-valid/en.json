@@ -1,0 +1,19 @@
+{
+  "hello": "Hello {{name}}!",
+  "welcome": "Welcome to our app",
+  "items": {
+    "count": "You have {count} items",
+    "empty": "No items found"
+  },
+  "user": {
+    "profile": {
+      "name": "Your name is {{firstName}} {{lastName}}",
+      "email": "Email: {email}"
+    }
+  },
+  "messages": {
+    "success": "Operation completed successfully",
+    "error": "An error occurred: %{errorCode}"
+  },
+  "fluent_style": "Welcome {$username}!"
+}
