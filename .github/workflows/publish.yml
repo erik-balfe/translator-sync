@@ -37,10 +37,11 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NMP_TOKEN }}
 
-      - name: Install Deno
-        uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-
-      - name: Publish to JSR
-        run: deno publish
+      # JSR publishing disabled for now - requires fixing Node.js imports
+      # - name: Install Deno
+      #   uses: denoland/setup-deno@v2
+      #   with:
+      #     deno-version: v2.x
+      #
+      # - name: Publish to JSR
+      #   run: deno publish
