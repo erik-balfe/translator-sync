@@ -229,7 +229,7 @@ grep "missing keys" metrics.log | wc -l
 name: Sync Translations
 on:
   push:
-    branches: [main]
+    branches: [master]
     paths:
       - 'locales/en/**'
   workflow_dispatch:

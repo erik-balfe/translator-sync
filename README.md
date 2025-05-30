@@ -386,14 +386,16 @@ translator-sync --use-memory
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md).
 
+**Note**: This repository uses `master` as the default branch (not `main`).
+
 ### Quick Contribution
 
 ```bash
 # Fork and clone
 git clone https://github.com/your-username/translator-sync.git
 
-# Create feature branch
-git checkout -b feature/amazing-feature
+# Create feature branch from master
+git checkout -b feature/amazing-feature master
 
 # Make changes and test
 bun test

@@ -35,7 +35,7 @@ The automated release process uses GitHub Actions with 3 jobs that run when you 
 
 ```bash
 jj describe -m "chore: release v0.2.0"
-# Then push your changes to main branch
+# Then push your changes to master branch
 ```
 
 ### 3. Create and Push Tag
