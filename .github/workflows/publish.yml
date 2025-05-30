@@ -74,5 +74,15 @@ jobs:
         with:
           deno-version: v2.x
 
+      - name: Debug JSR
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Files in directory:"
+          ls -la
+          echo "Deno version:"
+          deno --version
+          echo "deno.json contents:"
+          cat deno.json
+          
       - name: Publish to JSR
-        run: deno publish
+        run: deno publish --allow-dirty
