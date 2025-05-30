@@ -18,7 +18,7 @@ Welcome to the comprehensive documentation for TranslatorSync - a CLI tool for s
 - [Development Plan](development-plan.md) - Strategic development roadmap
 - [Testing Guidelines](development/testing.md) - Testing strategy and patterns
 - [Debugging Guide](development/debugging.md) - Common issues and solutions
-- [Release Process](development/release.md) - How to create releases
+- [Release Process](RELEASE-GUIDE.md) - How to create releases
 
 ### 📖 API Reference
 - [CLI Interface](api/cli-interface.md) - Command-line usage and flags
@@ -90,16 +90,17 @@ Documentation extensively links to related content:
 ### For Contributors
 1. Review [Contributing Guidelines](../CONTRIBUTING.md) for process
 2. Understand [Development Plan](development-plan.md) for roadmap
-3. Follow [Release Process](development/release.md) for publishing
+3. Follow [Release Process](RELEASE-GUIDE.md) for publishing
 4. Reference [Testing Guidelines](development/testing.md) for quality standards
 
 ## Document Status
 
 ### ✅ Complete
 - System Design Overview
-- Architectural Decision Records (ADR-001, ADR-002)
+- Architectural Decision Records (ADR-001, ADR-002, ADR-003)
 - Development Plan
 - Documentation Structure
+- Release Process Documentation (CI/CD with npm and JSR)
 
 ### 🚧 In Progress
 - CLI Interface Documentation
@@ -109,7 +110,6 @@ Documentation extensively links to related content:
 
 ### 📋 Planned
 - Performance Tuning Guide
-- Release Process Documentation
 - Migration Guides
 - API Server Documentation (future)
 
@@ -159,4 +159,4 @@ We welcome feedback on documentation:
 
 ---
 
-*This documentation is maintained by the TranslatorSync development team and community contributors. Last updated: 2025-01-XX*
+*This documentation is maintained by the TranslatorSync development team and community contributors. Last updated: 2025-05-31*
