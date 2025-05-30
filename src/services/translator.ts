@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { telemetry } from "../utils/telemetry";
+import { telemetry } from "../utils/telemetry.ts";
 
 /**
  * Context for translation requests to provide additional guidance.

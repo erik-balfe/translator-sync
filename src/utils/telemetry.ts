@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { type Span, metrics, trace } from "@opentelemetry/api";
-import type { TranslatorConfig } from "../config/configLoader";
-import { logger } from "./logger";
+import type { TranslatorConfig } from "../config/configLoader.ts";
+import { logger } from "./logger.ts";
 
 /**
  * Privacy-first telemetry system for TranslatorSync.

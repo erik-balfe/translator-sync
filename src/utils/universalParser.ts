@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 
-import { type FileFormat, detectFileFormat } from "./fileFormatDetector";
-import { parseFTLContent, serializeFTLContent } from "./ftlParser";
-import { parseJsonContent, serializeJsonContent } from "./jsonParser";
-import { logger } from "./logger";
+import { type FileFormat, detectFileFormat } from "./fileFormatDetector.ts";
+import { parseFTLContent, serializeFTLContent } from "./ftlParser.ts";
+import { parseJsonContent, serializeJsonContent } from "./jsonParser.ts";
+import { logger } from "./logger.ts";
 
 /**
  * Parse translation file content regardless of format.
