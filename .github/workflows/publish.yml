@@ -61,7 +61,6 @@ jobs:
   publish-jsr:
     needs: test-and-build
     runs-on: ubuntu-latest
-    environment: prod
     permissions:
       contents: read
       id-token: write
@@ -69,20 +68,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Deno
-        uses: denoland/setup-deno@v2
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          deno-version: v2.x
+          bun-version: latest
 
-      - name: Debug JSR
-        run: |
-          echo "Current directory: $(pwd)"
-          echo "Files in directory:"
-          ls -la
-          echo "Deno version:"
-          deno --version
-          echo "deno.json contents:"
-          cat deno.json
-          
+      - name: Install dependencies
+        run: bun install
+
       - name: Publish to JSR
-        run: deno publish --allow-dirty
+        run: npx jsr publish
