@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 import OpenAI from "openai";
-import { getVariableInstructions } from "../utils/jsonParser";
-import { logger } from "../utils/logger";
-import { telemetry } from "../utils/telemetry";
-import type { ProviderConfig, TranslationContext, TranslationService } from "./translator";
+import { getVariableInstructions } from "../utils/jsonParser.ts";
+import { logger } from "../utils/logger.ts";
+import { telemetry } from "../utils/telemetry.ts";
+import type { ProviderConfig, TranslationContext, TranslationService } from "./translator.ts";
 
 /**
  * OpenAI-specific configuration.

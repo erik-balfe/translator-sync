@@ -2,14 +2,14 @@
 import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { config } from "../config";
-import { TranslationServiceFactory } from "../services/serviceFactory";
-import type { TranslationService } from "../services/translator";
-import { loadEnv } from "../utils/envLoader";
-import { isSupportedFile } from "../utils/fileFormatDetector";
-import { isDirectory, listFiles, readFile, writeFile } from "../utils/fileManager";
-import { logger } from "../utils/logger";
-import { parseTranslationFile, serializeTranslationFile } from "../utils/universalParser";
+import { config } from "../config.ts";
+import { TranslationServiceFactory } from "../services/serviceFactory.ts";
+import type { TranslationService } from "../services/translator.ts";
+import { loadEnv } from "../utils/envLoader.ts";
+import { isSupportedFile } from "../utils/fileFormatDetector.ts";
+import { isDirectory, listFiles, readFile, writeFile } from "../utils/fileManager.ts";
+import { logger } from "../utils/logger.ts";
+import { parseTranslationFile, serializeTranslationFile } from "../utils/universalParser.ts";
 
 // Load environment variables from .env file
 loadEnv();
@@ -124,13 +124,13 @@ if (!mainFile) {
 // Async main function.
 async function main() {
   // Read and parse the main language file.
-  const englishContent = await readFile(mainFile);
-  const englishTranslations = parseTranslationFile(path.basename(mainFile), englishContent);
+  const englishContent = await readFile(mainFile!);
+  const englishTranslations = parseTranslationFile(path.basename(mainFile!), englishContent);
   if (englishTranslations.size === 0) {
     logger.error("No keys found in main language file. Aborting.");
     process.exit(1);
   }
-  logger.info(`Loaded ${englishTranslations.size} keys from ${path.basename(mainFile)}`);
+  logger.info(`Loaded ${englishTranslations.size} keys from ${path.basename(mainFile!)}`);
 
   // Initialize the translation service.
   // Create translation service based on environment variables or default to mock
@@ -138,7 +138,7 @@ async function main() {
 
   // Process all supported translation files except the main language file.
   const allItems = await listFiles(dirPath);
-  const mainFileName = path.basename(mainFile);
+  const mainFileName = path.basename(mainFile!);
   const files = allItems.filter((file) => isSupportedFile(file) && file !== mainFileName);
 
   for (const file of files) {

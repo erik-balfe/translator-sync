@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import fs from "node:fs";
 import path from "node:path";
-import { logger } from "./logger";
+import { logger } from "./logger.ts";
 
 /**
  * Simple .env file loader for Bun.

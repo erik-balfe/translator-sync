@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 import fs from "node:fs";
 import path from "node:path";
-import { logger } from "./logger";
-import { telemetry } from "./telemetry";
+import { logger } from "./logger.ts";
+import { telemetry } from "./telemetry.ts";
 
 /**
  * Smart feedback collection system that respects user time.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { isValidJson } from "./jsonParser";
+import { isValidJson } from "./jsonParser.ts";
 
 /**
  * Supported translation file formats.

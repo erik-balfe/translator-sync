@@ -5,7 +5,7 @@
  * Supports flat and nested JSON structures used by React i18next, Vue i18n, etc.
  */
 
-import { logger } from "./logger";
+import { logger } from "./logger.ts";
 
 export interface JsonTranslation {
   [key: string]: string | JsonTranslation;

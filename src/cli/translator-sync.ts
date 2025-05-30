@@ -1,16 +1,16 @@
 #!/usr/bin/env bun
 import { parseArgs } from "node:util";
-import { interactiveSetup, loadConfig } from "../config/configLoader";
-import { loadEnv } from "../utils/envLoader";
-import { initializeFeedback, recordUsage } from "../utils/feedback";
-import { logger } from "../utils/logger";
+import { interactiveSetup, loadConfig } from "../config/configLoader.ts";
+import { loadEnv } from "../utils/envLoader.ts";
+import { initializeFeedback, recordUsage } from "../utils/feedback.ts";
+import { logger } from "../utils/logger.ts";
 import {
   configureOTelFromEnv,
   initializeOpenTelemetry,
   shutdownOpenTelemetry,
-} from "../utils/otel";
-import { initializeTelemetry, telemetry } from "../utils/telemetry";
-import { runSync } from "./sync";
+} from "../utils/otel.ts";
+import { initializeTelemetry, telemetry } from "../utils/telemetry.ts";
+import { runSync } from "./sync.ts";
 
 // Load environment variables
 loadEnv();
@@ -141,7 +141,9 @@ For more options, run: translator-sync sync --help
 
 async function handleFeedbackCommand(args: string[]) {
   const subcommand = args[0];
-  const feedbackCollector = await import("../utils/feedback").then((m) => m.getFeedbackCollector());
+  const feedbackCollector = await import("../utils/feedback.ts").then((m) =>
+    m.getFeedbackCollector(),
+  );
 
   if (!feedbackCollector) {
     console.log("Feedback system not initialized.");

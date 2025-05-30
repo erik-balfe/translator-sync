@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { logger } from "./logger";
+import { logger } from "./logger.ts";
 
 /**
  * Pricing information for different LLM providers and models.

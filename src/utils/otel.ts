@@ -8,7 +8,7 @@ import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from "@opentelemetry/semantic
 
 // Define deployment environment attribute manually since import is problematic
 const ATTR_DEPLOYMENT_ENVIRONMENT = "deployment.environment";
-import { logger } from "./logger";
+import { logger } from "./logger.ts";
 
 /**
  * Initialize OpenTelemetry for privacy-first telemetry.

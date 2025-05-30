@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
 import fs from "node:fs";
 import path from "node:path";
-import { type TranslatorConfig, loadConfig } from "../config/configLoader";
-import { TranslationServiceFactory } from "../services/serviceFactory";
-import type { TranslationService } from "../services/translator";
-import { isSupportedFile } from "../utils/fileFormatDetector";
-import { readFile, writeFile } from "../utils/fileManager";
-import { logger } from "../utils/logger";
-import { parseTranslationFile, serializeTranslationFile } from "../utils/universalParser";
+import { type TranslatorConfig, loadConfig } from "../config/configLoader.ts";
+import { TranslationServiceFactory } from "../services/serviceFactory.ts";
+import type { TranslationService } from "../services/translator.ts";
+import { isSupportedFile } from "../utils/fileFormatDetector.ts";
+import { readFile, writeFile } from "../utils/fileManager.ts";
+import { logger } from "../utils/logger.ts";
+import { parseTranslationFile, serializeTranslationFile } from "../utils/universalParser.ts";
 
 export async function syncTranslations(directory?: string) {
   // Load config

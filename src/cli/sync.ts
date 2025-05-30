@@ -2,15 +2,15 @@
 import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { type TranslatorConfig, loadConfig } from "../config/configLoader";
-import { TranslationServiceFactory } from "../services/serviceFactory";
-import type { TranslationService } from "../services/translator";
-import { calculateCost } from "../utils/costCalculator";
-import { isSupportedFile } from "../utils/fileFormatDetector";
-import { isDirectory, listFiles, readFile, writeFile } from "../utils/fileManager";
-import { logger } from "../utils/logger";
-import { telemetry } from "../utils/telemetry";
-import { parseTranslationFile, serializeTranslationFile } from "../utils/universalParser";
+import { type TranslatorConfig, loadConfig } from "../config/configLoader.ts";
+import { TranslationServiceFactory } from "../services/serviceFactory.ts";
+import type { TranslationService } from "../services/translator.ts";
+import { calculateCost } from "../utils/costCalculator.ts";
+import { isSupportedFile } from "../utils/fileFormatDetector.ts";
+import { isDirectory, listFiles, readFile, writeFile } from "../utils/fileManager.ts";
+import { logger } from "../utils/logger.ts";
+import { telemetry } from "../utils/telemetry.ts";
+import { parseTranslationFile, serializeTranslationFile } from "../utils/universalParser.ts";
 
 interface SyncOptions {
   dryRun: boolean;

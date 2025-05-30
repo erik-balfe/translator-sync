@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
-import { getEnvironmentConfig } from "../config/environment";
-import { getProviderDefaults } from "../config/providers";
-import { OpenAIProvider } from "./openaiProvider";
-import type { ProviderConfig, TranslationService } from "./translator";
-import { MockTranslationService } from "./translator";
+import { getEnvironmentConfig } from "../config/environment.ts";
+import { getProviderDefaults } from "../config/providers.ts";
+import { OpenAIProvider } from "./openaiProvider.ts";
+import type { ProviderConfig, TranslationService } from "./translator.ts";
+import { MockTranslationService } from "./translator.ts";
 
 /**
  * Supported translation service providers.

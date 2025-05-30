@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import fs from "node:fs";
 import path from "node:path";
-import { logger } from "../utils/logger";
+import { logger } from "../utils/logger.ts";
 
 export interface TranslatorConfig {
   version: string;
@@ -133,9 +133,10 @@ export async function interactiveSetup(): Promise<TranslatorConfig> {
   console.log("Select translation provider:");
   console.log("1. OpenAI (GPT-4.1-nano) - Best quality ✅");
   console.log("2. DeepSeek (DeepSeek-v3) - Budget-friendly 💰");
-  console.log("3. Other (Groq, Mock) - See docs for setup");
+  console.log("3. Groq (Llama-4-Maverick) - Fast and free 🚀");
+  console.log("4. Mock - Testing only 🧪");
 
-  const providerChoice = prompt("Enter choice (1-3): ") || "1";
+  const providerChoice = prompt("Enter choice (1-4): ") || "1";
   let provider: TranslatorConfig["provider"];
 
   if (providerChoice === "1") {
@@ -143,29 +144,41 @@ export async function interactiveSetup(): Promise<TranslatorConfig> {
   } else if (providerChoice === "2") {
     provider = "deepseek";
   } else if (providerChoice === "3") {
-    console.log("\nFor other providers, please configure manually in .translator-sync.json");
-    console.log("See docs at: docs/reference/llm-pricing.md");
-    provider = "mock"; // Default to mock for manual setup
+    provider = "groq";
+  } else if (providerChoice === "4") {
+    provider = "mock";
   } else {
     provider = "openai"; // Default
   }
 
   // Model selection based on provider
   let model: string | undefined;
-  if (provider === "openai") {
-    model = "gpt-4.1-nano"; // Default to recommended model
-    console.log(`\n✅ Using recommended model: ${model}`);
-  } else if (provider === "deepseek") {
-    model = "deepseek-v3";
-    console.log(`\n✅ Using model: ${model}`);
-  } else if (provider === "groq") {
-    model = "llama-4-maverick";
+  switch (provider) {
+    case "openai":
+      model = "gpt-4.1-nano"; // Default to recommended model
+      console.log(`\n✅ Using recommended model: ${model}`);
+      break;
+    case "deepseek":
+      model = "deepseek-v3";
+      console.log(`\n✅ Using model: ${model}`);
+      break;
+    case "groq":
+      model = "llama-4-maverick";
+      console.log(`\n✅ Using model: ${model}`);
+      break;
+    case "mock":
+      // Mock provider doesn't need a model
+      model = undefined;
+      break;
+    default:
+      model = undefined;
   }
 
   // API Key
   let apiKey: string | undefined;
   if (provider !== "mock") {
-    apiKey = prompt(`\nEnter your ${provider.toUpperCase()} API key: `);
+    const apiKeyInput = prompt(`\nEnter your ${provider.toUpperCase()} API key: `);
+    apiKey = apiKeyInput || undefined;
     if (!apiKey) {
       console.log(
         "⚠️  No API key provided. You'll need to set TRANSLATOR_API_KEY environment variable.",
@@ -205,7 +218,7 @@ export async function interactiveSetup(): Promise<TranslatorConfig> {
 
   const enableTelemetryInput = prompt("\nEnable anonymous analytics? (Y/n): ");
   const enableTelemetry =
-    enableTelemetryInput.toLowerCase() !== "n" && enableTelemetryInput.toLowerCase() !== "no";
+    enableTelemetryInput?.toLowerCase() !== "n" && enableTelemetryInput?.toLowerCase() !== "no";
 
   const config: TranslatorConfig = {
     version: "1.0",
