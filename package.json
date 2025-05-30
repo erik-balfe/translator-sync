@@ -1,5 +1,5 @@
 {
-  "name": "@tyr/translator-sync",
+  "name": "translator-sync",
   "version": "0.1.0",
   "description": "AI-powered i18n translation file synchronization supporting JSON and Fluent formats",
   "keywords": ["i18n", "translation", "localization", "react", "vue", "fluent", "openai", "gpt"],

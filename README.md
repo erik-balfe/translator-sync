@@ -2,8 +2,8 @@
 
 AI-powered i18n translation file synchronization. Keep all your translation files in sync across multiple languages using OpenAI, DeepSeek, or Groq.
 
-[![npm version](https://badge.fury.io/js/%40tyr%2Ftranslator-sync.svg)](https://www.npmjs.com/package/@tyr/translator-sync)
-[![JSR](https://jsr.io/badges/@tyr/translator-sync)](https://jsr.io/@tyr/translator-sync)
+[![npm version](https://badge.fury.io/js/translator-sync.svg)](https://www.npmjs.com/package/translator-sync)
+[![JSR](https://jsr.io/badges/@erik-balfe/translator-sync)](https://jsr.io/@erik-balfe/translator-sync)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## ✨ Features
@@ -22,16 +22,16 @@ AI-powered i18n translation file synchronization. Keep all your translation file
 ### Install from npm
 ```bash
 # Run without installation
-npx @tyr/translator-sync init
+npx translator-sync init
 
 # Or install globally
-npm install -g @tyr/translator-sync
+npm install -g translator-sync
 translator-sync init
 ```
 
 ### Install from JSR
 ```bash
-deno install -Agf jsr:@tyr/translator-sync
+deno install -Agf jsr:@erik-balfe/translator-sync
 translator-sync init
 ```
 
@@ -432,4 +432,4 @@ MIT © TranslatorSync Contributors
 
 **Made with ❤️ for the internationalization community**
 
-[⭐ Star us on GitHub](https://github.com/erik-balfe/translator-sync) • [📦 npm](https://npmjs.com/package/@tyr/translator-sync) • [📦 JSR](https://jsr.io/@tyr/translator-sync) • [🐛 Report Issues](https://github.com/erik-balfe/translator-sync/issues)
+[⭐ Star us on GitHub](https://github.com/erik-balfe/translator-sync) • [📦 npm](https://npmjs.com/package/translator-sync) • [📦 JSR](https://jsr.io/@erik-balfe/translator-sync) • [🐛 Report Issues](https://github.com/erik-balfe/translator-sync/issues)

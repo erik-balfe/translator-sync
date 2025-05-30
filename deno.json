@@ -1,5 +1,5 @@
 {
-  "name": "@tyr/translator-sync",
+  "name": "@erik-balfe/translator-sync",
   "version": "0.1.0",
   "exports": "./dist/index.js",
   "tasks": {
