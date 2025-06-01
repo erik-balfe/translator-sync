@@ -6,28 +6,29 @@ import { telemetry } from "../utils/telemetry.ts";
 import type { ProviderConfig, TranslationContext, TranslationService } from "./translator.ts";
 
 /**
- * OpenAI-specific configuration.
+ * DeepSeek-specific configuration.
  */
-export interface OpenAIConfig extends ProviderConfig {
-  model?: string; // defaults to 'gpt-4o-mini'
+export interface DeepSeekConfig extends ProviderConfig {
+  model?: string; // defaults to 'deepseek-chat'
   temperature?: number; // defaults to 0.1 for consistent translations
 }
 
 /**
- * OpenAI GPT-based translation service.
+ * DeepSeek V3 translation service using OpenAI-compatible API.
  */
-export class OpenAIProvider implements TranslationService {
+export class DeepSeekProvider implements TranslationService {
   private client: OpenAI;
-  private config: OpenAIConfig;
+  private config: DeepSeekConfig;
   private totalInputTokens = 0;
   private totalOutputTokens = 0;
 
-  constructor(config: OpenAIConfig) {
+  constructor(config: DeepSeekConfig) {
     this.config = {
-      model: "gpt-4.1-nano", // Best balance of quality, speed, and cost at $0.15/$0.6 per 1M tokens
+      model: "deepseek-chat", // DeepSeek V3 model
       temperature: 0.1,
       timeout: 30000,
       maxRetries: 3,
+      baseURL: "https://api.deepseek.com", // DeepSeek API endpoint
       ...config,
     };
 
@@ -58,7 +59,7 @@ export class OpenAIProvider implements TranslationService {
         const prompt = this.buildPrompt(sourceLang, targetLang, texts, context);
 
         const response = await this.client.chat.completions.create({
-          model: this.config.model || "gpt-4.1-nano",
+          model: this.config.model || "deepseek-chat",
           messages: [{ role: "user", content: prompt }],
           temperature: this.config.temperature,
           max_tokens: this.calculateMaxTokens(texts),
@@ -74,7 +75,7 @@ export class OpenAIProvider implements TranslationService {
 
         // Record telemetry for successful translation
         telemetry.recordTranslation({
-          provider: "openai",
+          provider: "deepseek",
           inputTokens,
           outputTokens,
           fileCount: 1,
@@ -93,7 +94,7 @@ export class OpenAIProvider implements TranslationService {
         if (this.isNonRetryableError(lastError)) {
           // Record final failure telemetry
           telemetry.recordTranslation({
-            provider: "openai",
+            provider: "deepseek",
             inputTokens: 0,
             outputTokens: 0,
             fileCount: 1,
@@ -114,7 +115,7 @@ export class OpenAIProvider implements TranslationService {
 
     // Record final failure telemetry after all retries
     telemetry.recordTranslation({
-      provider: "openai",
+      provider: "deepseek",
       inputTokens: 0,
       outputTokens: 0,
       fileCount: 1,
@@ -290,28 +291,28 @@ Output format (one translation per line, same order, no numbers):`;
 
   private handleError(error: unknown): Error {
     if (error instanceof Error) {
-      // Handle OpenAI-specific errors
+      // Handle DeepSeek-specific errors (similar to OpenAI API)
       if (error.message.includes("401")) {
-        return new Error("OpenAI API authentication failed. Please check your API key.");
+        return new Error("DeepSeek API authentication failed. Please check your API key.");
       }
 
       if (error.message.includes("429")) {
-        return new Error("OpenAI API rate limit exceeded. Please try again later.");
+        return new Error("DeepSeek API rate limit exceeded. Please try again later.");
       }
 
       if (error.message.includes("400")) {
-        return new Error("OpenAI API request invalid. Please check your input.");
+        return new Error("DeepSeek API request invalid. Please check your input.");
       }
 
       if (error.message.includes("timeout")) {
-        return new Error("OpenAI API request timed out. Please try again.");
+        return new Error("DeepSeek API request timed out. Please try again.");
       }
 
       // Return original error for other cases
       return error;
     }
 
-    return new Error(`OpenAI translation failed: ${String(error)}`);
+    return new Error(`DeepSeek translation failed: ${String(error)}`);
   }
 
   private isNonRetryableError(error: Error): boolean {

@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 import { getEnvironmentConfig } from "../config/environment.ts";
 import { getProviderDefaults } from "../config/providers.ts";
+import { DeepSeekProvider } from "./deepseekProvider.ts";
+import { EnhancedTranslator } from "./enhancedTranslator.ts";
 import { OpenAIProvider } from "./openaiProvider.ts";
 import type { ProviderConfig, TranslationService } from "./translator.ts";
 import { MockTranslationService } from "./translator.ts";
@@ -53,8 +55,7 @@ export class TranslationServiceFactory {
           throw new Error("DeepSeek API key is required");
         }
         const defaults = getProviderDefaults("deepseek");
-        // DeepSeek uses OpenAI-compatible API
-        return new OpenAIProvider({
+        return new DeepSeekProvider({
           apiKey: config.apiKey,
           model: config.model || defaults.model,
           baseURL: config.baseURL || defaults.baseURL,
@@ -84,6 +85,14 @@ export class TranslationServiceFactory {
       default:
         throw new Error(`Unknown provider: ${config.provider}`);
     }
+  }
+
+  /**
+   * Creates an enhanced translator with context extraction.
+   */
+  static createEnhanced(config: ServiceConfig): EnhancedTranslator {
+    const baseService = TranslationServiceFactory.create(config);
+    return new EnhancedTranslator(baseService);
   }
 
   /**

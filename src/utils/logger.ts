@@ -33,7 +33,7 @@ export class Logger {
     if (!Logger.instance) {
       const level =
         (process.env.LOG_LEVEL as LogLevel) ||
-        (process.env.NODE_ENV === "production" ? "info" : "debug");
+        (process.env.NODE_ENV === "production" ? "info" : "info"); // Default to info level
 
       Logger.instance = new Logger({
         level,

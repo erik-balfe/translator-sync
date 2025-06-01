@@ -8,7 +8,11 @@ import { logger } from "./logger.ts";
 /**
  * Parse translation file content regardless of format.
  */
-export function parseTranslationFile(filename: string, content: string): Map<string, string> {
+export function parseTranslationFile(
+  filename: string,
+  content: string,
+  filePath?: string,
+): Map<string, string> {
   const format = detectFileFormat(filename, content);
 
   switch (format) {
@@ -18,7 +22,7 @@ export function parseTranslationFile(filename: string, content: string): Map<str
 
     case "json":
       logger.debug(`Parsing ${filename} as JSON format`);
-      return parseJsonContent(content);
+      return parseJsonContent(content, filePath);
 
     default:
       throw new Error(
@@ -33,6 +37,7 @@ export function parseTranslationFile(filename: string, content: string): Map<str
 export function serializeTranslationFile(
   filename: string,
   translations: Map<string, string>,
+  filePath?: string,
 ): string {
   const format = detectFileFormat(filename);
 
@@ -43,7 +48,7 @@ export function serializeTranslationFile(
 
     case "json":
       logger.debug(`Serializing ${filename} as JSON format`);
-      return serializeJsonContent(translations);
+      return serializeJsonContent(translations, filePath);
 
     default:
       throw new Error(

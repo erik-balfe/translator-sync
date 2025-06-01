@@ -3,8 +3,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { type TranslatorConfig, loadConfig } from "../config/configLoader.ts";
+import { QUALITY_SCORE_EXCELLENT, QUALITY_SCORE_THRESHOLD } from "../config/constants.ts";
+import type { EnhancedTranslator } from "../services/enhancedTranslator.ts";
 import { TranslationServiceFactory } from "../services/serviceFactory.ts";
-import type { TranslationService } from "../services/translator.ts";
+import type { TranslationContext, TranslationService } from "../services/translator.ts";
 import { calculateCost } from "../utils/costCalculator.ts";
 import { isSupportedFile } from "../utils/fileFormatDetector.ts";
 import { isDirectory, listFiles, readFile, writeFile } from "../utils/fileManager.ts";
@@ -91,12 +93,16 @@ If no directory is specified, searches for translations using config file settin
     process.exit(1);
   }
 
-  // Create translation service
-  const translator = TranslationServiceFactory.create({
+  // Skip description quality checks in simplified flow
+
+  // Create enhanced translation service
+  const enhancedTranslator = TranslationServiceFactory.createEnhanced({
     provider: config.provider,
     apiKey: config.apiKey || process.env.TRANSLATOR_API_KEY,
     model: config.model,
   });
+
+  // Skip description logging in simplified flow
 
   let totalCost = 0;
   let totalTranslations = 0;
@@ -114,12 +120,18 @@ If no directory is specified, searches for translations using config file settin
 
     if (langDirs.length > 0) {
       // Process subdirectory structure (e.g., locales/en/translation.json)
-      const result = await processLanguageDirectories(dir, langDirs, config, translator, options);
+      const result = await processLanguageDirectories(
+        dir,
+        langDirs,
+        config,
+        enhancedTranslator,
+        options,
+      );
       totalCost += result.cost;
       totalTranslations += result.translations;
     } else {
       // Process flat structure (e.g., locales/en.json)
-      const result = await processFlatDirectory(dir, items, config, translator, options);
+      const result = await processFlatDirectory(dir, items, config, enhancedTranslator, options);
       totalCost += result.cost;
       totalTranslations += result.translations;
     }
@@ -140,7 +152,7 @@ async function processLanguageDirectories(
   dir: string,
   langDirs: string[],
   config: TranslatorConfig,
-  translator: TranslationService,
+  translator: EnhancedTranslator,
   options: SyncOptions,
 ): Promise<{ cost: number; translations: number }> {
   let totalCost = 0;
@@ -162,7 +174,7 @@ async function processLanguageDirectories(
     // Load primary translation file
     const primaryPath = path.join(primaryDir, file);
     const primaryContent = await readFile(primaryPath);
-    const primaryTranslations = parseTranslationFile(file, primaryContent);
+    const primaryTranslations = parseTranslationFile(file, primaryContent, primaryPath);
 
     logger.info(`Primary file: ${file} (${primaryTranslations.size} keys)`);
 
@@ -197,7 +209,7 @@ async function processFlatDirectory(
   dir: string,
   files: string[],
   config: TranslatorConfig,
-  translator: TranslationService,
+  translator: EnhancedTranslator,
   options: SyncOptions,
 ): Promise<{ cost: number; translations: number }> {
   let totalCost = 0;
@@ -216,7 +228,7 @@ async function processFlatDirectory(
   for (const primaryFile of primaryFiles) {
     const primaryPath = path.join(dir, primaryFile);
     const primaryContent = await readFile(primaryPath);
-    const primaryTranslations = parseTranslationFile(primaryFile, primaryContent);
+    const primaryTranslations = parseTranslationFile(primaryFile, primaryContent, primaryPath);
 
     logger.info(`Primary file: ${primaryFile} (${primaryTranslations.size} keys)`);
 
@@ -250,14 +262,14 @@ async function processTargetFile(
   fileName: string,
   primaryTranslations: Map<string, string>,
   config: TranslatorConfig,
-  translator: TranslationService,
+  translator: EnhancedTranslator,
   options: SyncOptions,
 ): Promise<{ cost: number; translations: number }> {
   let cost = 0;
   let translations = 0;
 
   const targetContent = await readFile(targetPath);
-  const targetTranslations = parseTranslationFile(fileName, targetContent);
+  const targetTranslations = parseTranslationFile(fileName, targetContent, targetPath);
 
   // Find missing keys
   const missingKeys: string[] = [];
@@ -291,10 +303,11 @@ async function processTargetFile(
   const targetLang = extractLanguageFromPath(targetPath);
 
   try {
-    const translationResults = await translator.translateBatch(
+    const translationResults = await translator.translateWithContext(
       config.primaryLanguage,
       targetLang,
       textsToTranslate,
+      config.refinedDescription || config.projectDescription,
     );
 
     // Update with translations
@@ -321,7 +334,7 @@ async function processTargetFile(
     }
 
     // Write updated file
-    const newContent = serializeTranslationFile(fileName, updatedTranslations);
+    const newContent = serializeTranslationFile(fileName, updatedTranslations, targetPath);
 
     if (options.dryRun) {
       logger.info(`[DRY RUN] Would update ${fileName}`);

@@ -12,6 +12,20 @@ export interface JsonTranslation {
 }
 
 /**
+ * Detect if a JSON object has a flat or nested structure.
+ * Flat: all values are strings
+ * Nested: at least one value is an object
+ */
+export function detectJsonStructure(obj: JsonTranslation): "flat" | "nested" {
+  for (const value of Object.values(obj)) {
+    if (typeof value === "object" && value !== null) {
+      return "nested";
+    }
+  }
+  return "flat";
+}
+
+/**
  * Flatten nested JSON to dot notation keys.
  * Example: {user: {name: "Name"}} -> {"user.name": "Name"}
  */
@@ -59,12 +73,35 @@ export function unflattenJson(translations: Map<string, string>): JsonTranslatio
   return result;
 }
 
+// Store the original structure for each file
+const fileStructureCache = new Map<string, "flat" | "nested">();
+
 /**
  * Parse JSON translation file content.
+ * Detects and caches the structure (flat or nested) for later serialization.
  */
-export function parseJsonContent(content: string): Map<string, string> {
+export function parseJsonContent(content: string, filePath?: string): Map<string, string> {
   try {
     const parsed = JSON.parse(content) as JsonTranslation;
+    const structure = detectJsonStructure(parsed);
+
+    // Cache the structure for this file path if provided
+    if (filePath) {
+      fileStructureCache.set(filePath, structure);
+    }
+
+    // If flat, return as-is without flattening (preserves dots in keys)
+    if (structure === "flat") {
+      const result = new Map<string, string>();
+      for (const [key, value] of Object.entries(parsed)) {
+        if (typeof value === "string") {
+          result.set(key, value);
+        }
+      }
+      return result;
+    }
+
+    // If nested, flatten it
     return flattenJson(parsed);
   } catch (error) {
     logger.error(`Failed to parse JSON content: ${error}`);
@@ -74,15 +111,62 @@ export function parseJsonContent(content: string): Map<string, string> {
 
 /**
  * Serialize translations to JSON format.
+ * Preserves the original structure (flat or nested) if known.
  */
-export function serializeJsonContent(translations: Map<string, string>): string {
+export function serializeJsonContent(
+  translations: Map<string, string>,
+  filePath?: string,
+  forceStructure?: "flat" | "nested",
+): string {
   try {
-    const nested = unflattenJson(translations);
-    return JSON.stringify(nested, null, 2);
+    // Determine the structure to use
+    let structure: "flat" | "nested" = "flat"; // Default to flat
+
+    if (forceStructure) {
+      structure = forceStructure;
+    } else if (filePath && fileStructureCache.has(filePath)) {
+      structure = fileStructureCache.get(filePath)!;
+    } else {
+      // Auto-detect: if any key contains a dot, assume it should be nested
+      // unless all values indicate it should be flat
+      const hasDotKeys = Array.from(translations.keys()).some((key) => key.includes("."));
+      if (hasDotKeys) {
+        // Check if this looks like it should be nested based on key patterns
+        const keyPatterns = Array.from(translations.keys());
+        const looksNested = keyPatterns.some((key) => {
+          const parts = key.split(".");
+          // If we have keys like "user.name" and "user.email", it's likely nested
+          return (
+            parts.length > 1 &&
+            keyPatterns.some((otherKey) => otherKey.startsWith(parts[0] + ".") && otherKey !== key)
+          );
+        });
+        structure = looksNested ? "nested" : "flat";
+      }
+    }
+
+    // Serialize based on structure
+    if (structure === "flat") {
+      const result: JsonTranslation = {};
+      for (const [key, value] of translations) {
+        result[key] = value;
+      }
+      return JSON.stringify(result, null, 2);
+    } else {
+      const nested = unflattenJson(translations);
+      return JSON.stringify(nested, null, 2);
+    }
   } catch (error) {
     logger.error(`Failed to serialize JSON content: ${error}`);
     throw new Error(`Failed to serialize translations: ${error}`);
   }
+}
+
+/**
+ * Clear the structure cache (useful for testing).
+ */
+export function clearStructureCache(): void {
+  fileStructureCache.clear();
 }
 
 /**

@@ -180,3 +180,7 @@ CLAUDE.md
 # TranslatorSync specific
 .translator-sync.json
 .translator-feedback.json
+
+# Test projects (for testing only, not part of the package)
+test-projects/*
+test-react-app/
