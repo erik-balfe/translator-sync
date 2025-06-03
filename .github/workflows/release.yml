@@ -1,0 +1,184 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 0.2.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run security check
+        shell: bash
+        run: |
+          echo "🔍 Running security checks..."
+          bun run security-check
+
+      - name: Run tests
+        run: |
+          echo "🧪 Running unit tests..."
+          bun test tests/unit/
+
+      - name: Run type check
+        run: |
+          echo "🔍 Running type check..."
+          bun run type-check
+
+      - name: Run linter
+        run: |
+          echo "🧹 Running linter..."
+          bun run lint
+
+      - name: Build project
+        run: |
+          echo "🏗️ Building project..."
+          bun run build
+
+      - name: Extract version from tag or input
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION=${GITHUB_REF#refs/tags/v}
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Check if release notes exist
+        id: check_notes
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if [ -f "docs/releases/v$VERSION.md" ]; then
+            echo "notes_exist=true" >> $GITHUB_OUTPUT
+            echo "✅ Release notes found for v$VERSION"
+          else
+            echo "notes_exist=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No release notes found for v$VERSION"
+          fi
+
+      - name: Generate release notes from commits (if no manual notes)
+        id: auto_notes
+        if: steps.check_notes.outputs.notes_exist == 'false'
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          echo "🤖 Generating release notes from commits..."
+          
+          # Get previous tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          # Generate changelog
+          if [ -n "$PREVIOUS_TAG" ]; then
+            echo "## Changes since $PREVIOUS_TAG" > release_notes.md
+            echo "" >> release_notes.md
+            
+            # Get commits since last tag
+            git log --oneline --no-merges ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s" >> release_notes.md
+          else
+            echo "## Initial Release" > release_notes.md
+            echo "" >> release_notes.md
+            echo "This is the first release of TranslatorSync." >> release_notes.md
+          fi
+          
+          echo "" >> release_notes.md
+          echo "---" >> release_notes.md
+          echo "🤖 *This release was automatically generated from commit messages.*" >> release_notes.md
+          echo "auto_generated=true" >> $GITHUB_OUTPUT
+
+      - name: Read release notes
+        id: release_notes
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          if [ "${{ steps.check_notes.outputs.notes_exist }}" = "true" ]; then
+            # Use manual release notes (skip title line)
+            NOTES=$(tail -n +3 "docs/releases/v$VERSION.md")
+            echo "Using manual release notes from docs/releases/v$VERSION.md"
+          else
+            # Use auto-generated notes
+            NOTES=$(cat release_notes.md)
+            echo "Using auto-generated release notes"
+          fi
+          
+          # Save notes to file for GitHub release
+          echo "$NOTES" > final_release_notes.md
+          echo "📝 Release notes prepared"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          body_path: final_release_notes.md
+          draft: false
+          prerelease: false
+          generate_release_notes: false
+          files: |
+            dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to NPM
+        if: success()
+        shell: bash
+        run: |
+          echo "📦 Publishing to NPM..."
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+          bun run build
+          npm publish --access public
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create summary
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          echo "## 🎉 Release v$VERSION Created Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Completed Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "- Security check passed" >> $GITHUB_STEP_SUMMARY
+          echo "- All tests passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Type check passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Linting passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Build successful" >> $GITHUB_STEP_SUMMARY
+          echo "- GitHub release created" >> $GITHUB_STEP_SUMMARY
+          echo "- NPM package published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Links:" >> $GITHUB_STEP_SUMMARY
+          echo "- [GitHub Release](https://github.com/erik-balfe/translator-sync/releases/tag/v$VERSION)" >> $GITHUB_STEP_SUMMARY
+          echo "- [NPM Package](https://www.npmjs.com/package/translator-sync)" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.check_notes.outputs.notes_exist }}" = "true" ]; then
+            echo "- Release notes: docs/releases/v$VERSION.md" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ⚠️ Auto-generated release notes (consider adding manual notes)" >> $GITHUB_STEP_SUMMARY
+          fi

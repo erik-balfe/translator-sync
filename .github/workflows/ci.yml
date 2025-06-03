@@ -50,6 +50,7 @@ jobs:
         run: bun test tests/unit/
 
       - name: Run integration tests (skip if no API keys)
+        shell: bash
         run: |
           if [ -n "${{ secrets.OPENAI_API_KEY }}" ]; then
             echo "Running integration tests with API keys"
@@ -79,6 +80,7 @@ jobs:
         run: bun install
 
       - name: Check test coverage threshold
+        shell: bash
         run: |
           # Run unit tests with coverage
           bun test --coverage tests/unit/ > coverage-report.txt
@@ -115,6 +117,7 @@ jobs:
         run: bun run build
 
       - name: Verify build output
+        shell: bash
         run: |
           # Check that dist files exist
           if [ ! -d "dist" ]; then
@@ -162,6 +165,7 @@ jobs:
         run: bun install
 
       - name: Run security audit
+        shell: bash
         run: |
           # Run npm audit for known vulnerabilities
           npm audit --audit-level=high || true

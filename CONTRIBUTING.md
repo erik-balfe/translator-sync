@@ -19,6 +19,33 @@ chmod +x .git/hooks/pre-commit
 3. Use `.env` for local development (already gitignored)
 4. Use placeholders like `sk-XXXXXX...` in examples
 
+## 📦 Release Process
+
+This project uses an automated release system. See [docs/RELEASE-AUTOMATION.md](docs/RELEASE-AUTOMATION.md) for full details.
+
+### Quick Start:
+```bash
+# Add changes during development
+bun run release:add-change
+
+# When ready for release
+bun run release:prepare 0.2.1
+bun run release:finalize 0.2.1
+```
+
+### For Contributors:
+When submitting PRs, add your changes to `docs/releases/UNRELEASED.md` in the appropriate category:
+
+```markdown
+## 🐛 Bug Fixes
+- Fix your bug description here
+
+## ✨ New Features  
+- Add your feature description here
+```
+
+This helps maintainers track changes and create comprehensive release notes.
+
 ## Completed
 
 - [x] Integration tests (using Bun's test runner).
