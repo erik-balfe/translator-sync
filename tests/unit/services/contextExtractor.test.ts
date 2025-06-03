@@ -263,11 +263,31 @@ describe("ContextExtractor", () => {
     });
   });
 
+  describe("API error handling", () => {
+    it("should return fallback score when API fails", async () => {
+      const service = createMockTranslationService();
+      service.translateBatch = mock(async () => {
+        throw new Error("API error");
+      });
+
+      const extractor = new ContextExtractor(service);
+      const result = await extractor.refineProjectDescription(
+        "React UI dashboard interface for users",
+      );
+
+      expect(result.qualityScore).toBe(FALLBACK_QUALITY_SCORE);
+      expect(result.suggestions).toContain("API error");
+    });
+  });
+
   describe("heuristic evaluation", () => {
     it("should give higher score for UI/interface mentions", async () => {
       const service = createMockTranslationService();
-      service.translateBatch = mock(async () => {
-        throw new Error("Force heuristic");
+      service.translateBatch = mock(async (from, to, texts) => {
+        // Return invalid JSON to trigger heuristic evaluation
+        const map = new Map<string, string>();
+        map.set(texts[0], "invalid json response");
+        return map;
       });
 
       const extractor = new ContextExtractor(service);
@@ -280,8 +300,11 @@ describe("ContextExtractor", () => {
 
     it("should give lower score for technical details", async () => {
       const service = createMockTranslationService();
-      service.translateBatch = mock(async () => {
-        throw new Error("Force heuristic");
+      service.translateBatch = mock(async (from, to, texts) => {
+        // Return invalid JSON to trigger heuristic evaluation
+        const map = new Map<string, string>();
+        map.set(texts[0], "invalid json response");
+        return map;
       });
 
       const extractor = new ContextExtractor(service);
@@ -294,8 +317,11 @@ describe("ContextExtractor", () => {
 
     it("should penalize very short descriptions", async () => {
       const service = createMockTranslationService();
-      service.translateBatch = mock(async () => {
-        throw new Error("Force heuristic");
+      service.translateBatch = mock(async (from, to, texts) => {
+        // Return invalid JSON to trigger heuristic evaluation
+        const map = new Map<string, string>();
+        map.set(texts[0], "invalid json response");
+        return map;
       });
 
       const extractor = new ContextExtractor(service);
@@ -306,8 +332,11 @@ describe("ContextExtractor", () => {
 
     it("should provide suggestions for low scores", async () => {
       const service = createMockTranslationService();
-      service.translateBatch = mock(async () => {
-        throw new Error("Force heuristic");
+      service.translateBatch = mock(async (from, to, texts) => {
+        // Return invalid JSON to trigger heuristic evaluation
+        const map = new Map<string, string>();
+        map.set(texts[0], "invalid json response");
+        return map;
       });
 
       const extractor = new ContextExtractor(service);

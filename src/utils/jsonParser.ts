@@ -197,8 +197,8 @@ export function extractVariables(text: string): string[] {
   const variables = new Set<string>();
 
   // Process in order of specificity to avoid conflicts
-  // 1. React i18next: {{variable}}
-  const reactMatches = text.match(/\{\{[^}]+\}\}/g);
+  // 1. React i18next: {{variable}} - handles nested braces
+  const reactMatches = text.match(/\{\{(?:[^{}]|\{[^}]*\})*\}\}/g);
   if (reactMatches) {
     for (const match of reactMatches) {
       variables.add(match);

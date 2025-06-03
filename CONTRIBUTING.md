@@ -2,6 +2,23 @@
 
 This document serves as the roadmap and guide for further development. Use it as a checklist to track progress and new ideas.
 
+## 🔐 Security Requirements
+
+**CRITICAL: Before contributing, read [docs/SECURITY-API-KEYS.md](docs/SECURITY-API-KEYS.md)**
+
+### Pre-commit Setup (Recommended)
+```bash
+# Install the pre-commit hook to prevent accidental API key commits
+cp scripts/pre-commit-hook.sh .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
+### Before Every Commit
+1. Run `bun run security-check` to scan for exposed API keys
+2. Never commit real API keys, even in documentation
+3. Use `.env` for local development (already gitignored)
+4. Use placeholders like `sk-XXXXXX...` in examples
+
 ## Completed
 
 - [x] Integration tests (using Bun's test runner).
