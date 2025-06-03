@@ -103,6 +103,7 @@ jobs:
   release:
     needs: pre-release-checks
     runs-on: ubuntu-latest
+    environment: prod
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -194,41 +195,81 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Debug NPM Token Access
+        shell: bash
+        run: |
+          echo "🔍 Debugging NPM token access..."
+          echo "Environment: ${{ github.environment }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Actor: ${{ github.actor }}"
+          
+          # Check different possible token sources
+          if [ -n "${{ secrets.NPM_TOKEN }}" ]; then
+            echo "✅ NPM_TOKEN found in secrets.NPM_TOKEN"
+            echo "Token starts with: $(echo '${{ secrets.NPM_TOKEN }}' | cut -c1-8)..."
+          else
+            echo "❌ NPM_TOKEN not found in secrets.NPM_TOKEN"
+          fi
+          
+          if [ -n "${{ vars.NPM_TOKEN }}" ]; then
+            echo "✅ NPM_TOKEN found in vars.NPM_TOKEN"
+          else
+            echo "❌ NPM_TOKEN not found in vars.NPM_TOKEN"
+          fi
+          
+          # List available secrets (names only, not values)
+          echo "Available secret keys in this context:"
+          env | grep -E '^[A-Z_]+=' | cut -d= -f1 | sort
+
       - name: Publish to NPM
         if: success()
         shell: bash
         run: |
           echo "📦 Publishing to NPM..."
           
-          # Check if NPM_TOKEN is set
-          if [ -z "${{ secrets.NPM_TOKEN }}" ]; then
-            echo "❌ ERROR: NPM_TOKEN secret is not configured"
+          # Try multiple token sources
+          NPM_TOKEN=""
+          if [ -n "${{ secrets.NPM_TOKEN }}" ]; then
+            NPM_TOKEN="${{ secrets.NPM_TOKEN }}"
+            echo "✅ Using NPM_TOKEN from secrets"
+          elif [ -n "${{ vars.NPM_TOKEN }}" ]; then
+            NPM_TOKEN="${{ vars.NPM_TOKEN }}"
+            echo "✅ Using NPM_TOKEN from variables"
+          fi
+          
+          # Check if any NPM_TOKEN is available
+          if [ -z "$NPM_TOKEN" ]; then
+            echo "❌ ERROR: NPM_TOKEN not found in any location"
             echo ""
-            echo "🔧 SETUP REQUIRED:"
-            echo "1. Get your NPM access token:"
-            echo "   - Go to https://www.npmjs.com/settings/tokens"
-            echo "   - Click 'Generate New Token' → 'Granular Access Token'"
-            echo "   - Set expiration and permissions for 'translator-sync' package"
-            echo "   - Copy the token (starts with 'npm_')"
+            echo "🔧 TROUBLESHOOTING:"
+            echo "Since you mentioned the token is for 'prod' environment:"
             echo ""
-            echo "2. Add token to GitHub repository:"
+            echo "1. Verify the secret is in the correct location:"
+            echo "   - Repository secrets: Settings → Secrets and variables → Actions → Repository secrets"
+            echo "   - Environment secrets: Settings → Environments → prod → Environment secrets"
+            echo ""
+            echo "2. Check the secret name is exactly: NPM_TOKEN (case-sensitive)"
+            echo ""
+            echo "3. If using environment secrets, verify this workflow:"
+            echo "   - Has 'environment: prod' configured (✅ now added)"
+            echo "   - The environment exists and has the secret"
+            echo ""
+            echo "4. Try adding as Repository secret instead of Environment secret"
             echo "   - Go to: https://github.com/erik-balfe/translator-sync/settings/secrets/actions"
-            echo "   - Click 'New repository secret'"
+            echo "   - Click 'New repository secret' (not environment secret)"
             echo "   - Name: NPM_TOKEN"
-            echo "   - Value: [paste your npm token]"
+            echo "   - Value: [your npm token]"
             echo ""
-            echo "3. Re-run this workflow"
-            echo ""
-            echo "💡 Alternative: Use 'npm login' locally and publish manually"
-            echo "   bun run build && npm publish --access public"
+            echo "💡 Alternative: Publish manually"
+            echo "   npm login && npm publish --access public"
             exit 1
           fi
           
           # Validate token format
-          if [[ ! "${{ secrets.NPM_TOKEN }}" =~ ^npm_.+ ]]; then
+          if [[ ! "$NPM_TOKEN" =~ ^npm_.+ ]]; then
             echo "❌ ERROR: NPM_TOKEN appears to be in wrong format"
             echo "Expected format: npm_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-            echo "Current token starts with: $(echo '${{ secrets.NPM_TOKEN }}' | cut -c1-8)..."
+            echo "Current token starts with: $(echo "$NPM_TOKEN" | cut -c1-8)..."
             echo ""
             echo "Please verify your NPM token is a granular access token from:"
             echo "https://www.npmjs.com/settings/tokens"
@@ -254,7 +295,7 @@ jobs:
           fi
           
           echo "🔐 Configuring NPM authentication..."
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
           
           echo "✅ NPM authentication configured"
           echo "📦 Publishing translator-sync@$VERSION to NPM..."
