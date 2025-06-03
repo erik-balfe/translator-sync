@@ -48,12 +48,22 @@ jobs:
         shell: bash
         run: |
           VERSION="${{ github.event.inputs.version }}"
+          
+          # Check git tags
           if git tag -l "v$VERSION" | grep -q "v$VERSION"; then
-            echo "❌ ERROR: Version v$VERSION already exists as a tag"
+            echo "❌ ERROR: Version v$VERSION already exists as a git tag"
             echo "Please choose a different version number"
             exit 1
           fi
-          echo "✅ Version v$VERSION is available"
+          
+          # Check NPM registry
+          if npm view translator-sync@$VERSION version 2>/dev/null; then
+            echo "❌ ERROR: Version $VERSION is already published to NPM"
+            echo "Please choose a different version number"
+            exit 1
+          fi
+          
+          echo "✅ Version v$VERSION is available for release"
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -189,10 +199,70 @@ jobs:
         shell: bash
         run: |
           echo "📦 Publishing to NPM..."
+          
+          # Check if NPM_TOKEN is set
+          if [ -z "${{ secrets.NPM_TOKEN }}" ]; then
+            echo "❌ ERROR: NPM_TOKEN secret is not configured"
+            echo ""
+            echo "🔧 SETUP REQUIRED:"
+            echo "1. Get your NPM access token:"
+            echo "   - Go to https://www.npmjs.com/settings/tokens"
+            echo "   - Click 'Generate New Token' → 'Granular Access Token'"
+            echo "   - Set expiration and permissions for 'translator-sync' package"
+            echo "   - Copy the token (starts with 'npm_')"
+            echo ""
+            echo "2. Add token to GitHub repository:"
+            echo "   - Go to: https://github.com/erik-balfe/translator-sync/settings/secrets/actions"
+            echo "   - Click 'New repository secret'"
+            echo "   - Name: NPM_TOKEN"
+            echo "   - Value: [paste your npm token]"
+            echo ""
+            echo "3. Re-run this workflow"
+            echo ""
+            echo "💡 Alternative: Use 'npm login' locally and publish manually"
+            echo "   bun run build && npm publish --access public"
+            exit 1
+          fi
+          
+          # Validate token format
+          if [[ ! "${{ secrets.NPM_TOKEN }}" =~ ^npm_.+ ]]; then
+            echo "❌ ERROR: NPM_TOKEN appears to be in wrong format"
+            echo "Expected format: npm_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+            echo "Current token starts with: $(echo '${{ secrets.NPM_TOKEN }}' | cut -c1-8)..."
+            echo ""
+            echo "Please verify your NPM token is a granular access token from:"
+            echo "https://www.npmjs.com/settings/tokens"
+            exit 1
+          fi
+          
+          # Check if version already exists on NPM
+          VERSION="${{ github.event.inputs.version }}"
+          if npm view translator-sync@$VERSION version 2>/dev/null; then
+            echo "❌ ERROR: Version $VERSION is already published to NPM"
+            echo ""
+            echo "This usually happens when:"
+            echo "1. A previous release workflow succeeded"
+            echo "2. Manual npm publish was done"
+            echo "3. Feature branch accidentally published this version"
+            echo ""
+            echo "🔧 SOLUTIONS:"
+            echo "1. Use a different version number (recommended)"
+            echo "2. Unpublish if published within last 72 hours:"
+            echo "   npm unpublish translator-sync@$VERSION"
+            echo "3. Skip to next patch version"
+            exit 1
+          fi
+          
+          echo "🔐 Configuring NPM authentication..."
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+          
+          echo "✅ NPM authentication configured"
+          echo "📦 Publishing translator-sync@$VERSION to NPM..."
+          
           npm publish --access public
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          
+          echo "✅ Successfully published to NPM!"
+          echo "🔗 Package available at: https://www.npmjs.com/package/translator-sync/v/$VERSION"
 
       - name: Create summary
         shell: bash
@@ -209,7 +279,11 @@ jobs:
           echo "- Build successful" >> $GITHUB_STEP_SUMMARY
           echo "- Tag created and pushed" >> $GITHUB_STEP_SUMMARY
           echo "- GitHub release created" >> $GITHUB_STEP_SUMMARY
-          echo "- NPM package published" >> $GITHUB_STEP_SUMMARY
+          if [ -z "${{ secrets.NPM_TOKEN }}" ]; then
+            echo "- ❌ NPM publish failed (NPM_TOKEN not configured)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- NPM package published" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🔗 Links:" >> $GITHUB_STEP_SUMMARY
           echo "- [GitHub Release](https://github.com/erik-balfe/translator-sync/releases/tag/v$VERSION)" >> $GITHUB_STEP_SUMMARY
