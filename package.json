@@ -36,7 +36,8 @@
     "release:prepare": "scripts/release-helper.sh prepare",
     "release:finalize": "scripts/release-helper.sh finalize",
     "release:add-change": "scripts/release-helper.sh add-change",
-    "release:preview": "scripts/release-helper.sh preview"
+    "release:preview": "scripts/release-helper.sh preview",
+    "release:github": "echo '🚀 To release via GitHub:\\n1. Go to: https://github.com/erik-balfe/translator-sync/actions/workflows/manual-release.yml\\n2. Click \"Run workflow\"\\n3. Enter version number\\n4. Click green \"Run workflow\" button'"
   },
   "dependencies": {
     "@fluent/syntax": "^0.19.0",

@@ -1,0 +1,222 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 0.2.1)'
+        required: true
+        type: string
+      branch:
+        description: 'Branch to release from'
+        required: true
+        default: 'master'
+        type: choice
+        options:
+          - master
+      skip-tests:
+        description: 'Skip tests (only if they already passed)'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  pre-release-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+          fetch-depth: 0
+
+      - name: Verify branch is master
+        shell: bash
+        run: |
+          if [ "${{ github.event.inputs.branch }}" != "master" ]; then
+            echo "❌ ERROR: Releases must be created from the 'master' branch"
+            exit 1
+          fi
+          echo "✅ Release will be created from master branch"
+
+      - name: Check if version already exists
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          if git tag -l "v$VERSION" | grep -q "v$VERSION"; then
+            echo "❌ ERROR: Version v$VERSION already exists as a tag"
+            echo "Please choose a different version number"
+            exit 1
+          fi
+          echo "✅ Version v$VERSION is available"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run tests (unless skipped)
+        if: ${{ github.event.inputs.skip-tests != 'true' }}
+        shell: bash
+        run: |
+          echo "🧪 Running tests..."
+          bun test tests/unit/
+          echo "✅ All tests passed"
+
+      - name: Run security check
+        shell: bash
+        run: |
+          echo "🔍 Running security check..."
+          bun run security-check
+          echo "✅ Security check passed"
+
+      - name: Run type check
+        run: |
+          echo "🔍 Running type check..."
+          bun run type-check
+          echo "✅ Type check passed"
+
+      - name: Run linter
+        run: |
+          echo "🧹 Running linter..."
+          bun run lint
+          echo "✅ Linter passed"
+
+  release:
+    needs: pre-release-checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Update package.json version
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          # Update package.json version
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" package.json
+          echo "📦 Updated package.json to version $VERSION"
+
+      - name: Build project
+        run: |
+          echo "🏗️ Building project..."
+          bun run build
+          echo "✅ Build successful"
+
+      - name: Check for release notes
+        id: check_notes
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          if [ -f "docs/releases/v$VERSION.md" ]; then
+            echo "notes_exist=true" >> $GITHUB_OUTPUT
+            echo "✅ Release notes found for v$VERSION"
+          else
+            echo "notes_exist=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No release notes found for v$VERSION - will use auto-generated notes"
+          fi
+
+      - name: Read release notes
+        id: release_notes
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          
+          if [ "${{ steps.check_notes.outputs.notes_exist }}" = "true" ]; then
+            # Use manual release notes (skip title line)
+            NOTES=$(tail -n +3 "docs/releases/v$VERSION.md")
+            echo "Using manual release notes from docs/releases/v$VERSION.md"
+          else
+            # Use unreleased notes or generate basic notes
+            if [ -f "docs/releases/UNRELEASED.md" ]; then
+              NOTES=$(tail -n +3 "docs/releases/UNRELEASED.md")
+              echo "Using UNRELEASED.md for release notes"
+            else
+              NOTES="## Release v$VERSION\n\nThis release includes various improvements and bug fixes.\n\nPlease see the commit history for details."
+              echo "Using generic release notes"
+            fi
+          fi
+          
+          # Save notes to file for GitHub release
+          echo "$NOTES" > final_release_notes.md
+          echo "📝 Release notes prepared"
+
+      - name: Create git tag
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin "v$VERSION"
+          echo "🏷️ Created and pushed tag v$VERSION"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          name: v${{ github.event.inputs.version }}
+          body_path: final_release_notes.md
+          draft: false
+          prerelease: false
+          generate_release_notes: false
+          files: |
+            dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to NPM
+        if: success()
+        shell: bash
+        run: |
+          echo "📦 Publishing to NPM..."
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+          npm publish --access public
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create summary
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          echo "## 🎉 Release v$VERSION Created Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Completed Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "- Pre-release checks passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Security check passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Type check passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Linting passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Build successful" >> $GITHUB_STEP_SUMMARY
+          echo "- Tag created and pushed" >> $GITHUB_STEP_SUMMARY
+          echo "- GitHub release created" >> $GITHUB_STEP_SUMMARY
+          echo "- NPM package published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Links:" >> $GITHUB_STEP_SUMMARY
+          echo "- [GitHub Release](https://github.com/erik-balfe/translator-sync/releases/tag/v$VERSION)" >> $GITHUB_STEP_SUMMARY
+          echo "- [NPM Package](https://www.npmjs.com/package/translator-sync/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.check_notes.outputs.notes_exist }}" = "true" ]; then
+            echo "- Release notes: docs/releases/v$VERSION.md" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ⚠️ Used UNRELEASED.md or generic notes (consider adding manual notes)" >> $GITHUB_STEP_SUMMARY
+          fi

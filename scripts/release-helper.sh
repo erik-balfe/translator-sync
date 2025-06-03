@@ -177,19 +177,18 @@ finalize_release() {
     
     log_info "Finalizing release v$version"
     
-    # Check if we're on master branch
-    local current_branch=$(jj log -r @ --no-graph -T 'branches' 2>/dev/null || echo "unknown")
-    if [[ "$current_branch" != *"master"* ]]; then
-        log_error "Releases must be created from the 'master' branch"
-        echo "Current branch: $current_branch"
+    # Skip branch check - trust the user knows what they're doing
+    log_info "⚠️  Branch verification skipped (VCS-independent mode)"
+    log_info "Please ensure you're on the master branch before proceeding!"
+    read -p "Are you on the master branch? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        log_error "Please switch to master branch first"
         echo ""
-        echo "Correct workflow:"
-        echo "1. Merge your PR to master first"
-        echo "2. jj edit master"
-        echo "3. Run: $0 finalize $version"
+        echo "For jj users: jj edit master"
+        echo "For git users: git checkout master"
         exit 1
     fi
-    log_info "✅ On master branch, proceeding with release"
     
     # Check if release notes exist
     if [ ! -f "docs/releases/v$version.md" ]; then

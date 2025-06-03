@@ -112,6 +112,23 @@ bun run release:finalize 0.2.1
 
 ### GitHub Actions Triggers:
 
+#### Manual Workflow (Recommended for jj users):
+This is the **easiest and safest method**, especially if you use jj:
+
+1. **Merge PR to master** (via GitHub UI)
+2. **Go to GitHub Actions** → "Manual Release" workflow
+3. **Click "Run workflow"**
+4. **Enter version** (e.g., 0.2.2)
+5. **Click "Run workflow"** button
+
+The workflow will:
+- ✅ Verify you're releasing from master
+- ✅ Run all quality checks
+- ✅ Create git tag automatically
+- ✅ Build and publish to NPM
+- ✅ Create GitHub release
+- ✅ Use your prepared release notes
+
 #### Tag-based Release:
 ```bash
 # IMPORTANT: Must be on master branch!
