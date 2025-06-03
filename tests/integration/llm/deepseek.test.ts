@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { beforeEach, describe, expect, test } from "bun:test";
-import { TranslationServiceFactory } from "../../../src/services/serviceFactory";
-import type { TranslationContext } from "../../../src/services/translator";
+import { createTranslationService } from "../../../src/services/serviceFactory";
+import type { TranslationContext, TranslationService } from "../../../src/services/translator";
 import { loadEnv } from "../../../src/utils/envLoader";
 
 // Load environment variables from .env file
@@ -39,13 +39,13 @@ const validateTranslation = (
 };
 
 describe("DeepSeek Translation Provider", () => {
-  let service: any;
+  let service: TranslationService;
 
   beforeEach(() => {
     if (hasApiKey()) {
-      service = TranslationServiceFactory.create({
+      service = createTranslationService({
         provider: "deepseek",
-        apiKey: process.env.DEEPSEEK_API_KEY!,
+        apiKey: process.env.DEEPSEEK_API_KEY || "",
         model: "deepseek-chat", // Cheapest model at $0.14/$0.28 per 1M tokens
         timeout: 60000, // Longer timeout for DeepSeek
       });
@@ -58,7 +58,7 @@ describe("DeepSeek Translation Provider", () => {
     });
 
     test("throws error with invalid API key", async () => {
-      const invalidService = TranslationServiceFactory.create({
+      const invalidService = createTranslationService({
         provider: "deepseek",
         apiKey: "invalid-key-123",
       });
@@ -94,7 +94,10 @@ describe("DeepSeek Translation Provider", () => {
 
       expect(result.size).toBe(1);
       const translation = result.get("Hello world");
-      validateTranslation("Hello world", translation!);
+      expect(translation).toBeDefined();
+      if (translation) {
+        validateTranslation("Hello world", translation);
+      }
 
       // DeepSeek should be very cost-effective
       console.log(`DeepSeek translation: "Hello world" -> "${translation}"`);

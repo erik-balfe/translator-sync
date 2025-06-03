@@ -25,6 +25,7 @@ describe("config", () => {
 
     // Attempt to modify (this won't actually change it in TypeScript with proper types)
     try {
+      // biome-ignore lint/suspicious/noExplicitAny: Testing runtime behavior for read-only property
       (config as any).mainLang = "fr";
     } catch (error) {
       // If it throws, that's fine - it means it's protected

@@ -79,7 +79,8 @@ export function initializeOpenTelemetry(config: OTelConfig = {}): NodeSDK | null
 
     // Create metric reader with reasonable export interval
     const metricReader = new PeriodicExportingMetricReader({
-      exporter: metricExporter,
+      // biome-ignore lint/suspicious/noExplicitAny: OpenTelemetry version compatibility issue
+      exporter: metricExporter as any,
       exportIntervalMillis: 30000, // Export every 30 seconds
       exportTimeoutMillis: 10000, // 10 second timeout
     });
@@ -87,7 +88,8 @@ export function initializeOpenTelemetry(config: OTelConfig = {}): NodeSDK | null
     // Initialize SDK with minimal instrumentation
     sdk = new NodeSDK({
       resource,
-      traceExporter,
+      // biome-ignore lint/suspicious/noExplicitAny: OpenTelemetry version compatibility issue
+      traceExporter: traceExporter as any,
       metricReader,
       // Explicitly disable automatic instrumentation to prevent data leaks
       instrumentations: [],

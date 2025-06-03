@@ -62,8 +62,9 @@ describe("Universal Parser", () => {
       const result = serializeTranslationFile("en.json", translations);
       const parsed = JSON.parse(result);
 
+      // When serializing without context, dot keys are preserved as flat structure
       expect(parsed.hello).toBe("Hello world");
-      expect(parsed.user.welcome).toBe("Welcome {{name}}");
+      expect(parsed["user.welcome"]).toBe("Welcome {{name}}");
     });
 
     test("throws error for unsupported format", () => {

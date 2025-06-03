@@ -321,8 +321,8 @@ function promptForApiKey(provider: TranslatorConfig["provider"]): string | undef
   if (!apiKey) {
     console.log("\n[!] No API key provided.");
     console.log(`    Add your API key to ${CONFIG_FILENAME} in the "apiKey" field`);
-    console.log(`    or set TRANSLATOR_API_KEY environment variable.`);
-    console.log(`    The translator-sync command will not work without a valid API key.\n`);
+    console.log("    or set TRANSLATOR_API_KEY environment variable.");
+    console.log("    The translator-sync command will not work without a valid API key.\n");
   }
 
   return apiKey;
@@ -336,26 +336,10 @@ function getRunInstructions(): string {
   const isGlobalRun = process.argv[1]?.includes("translator-sync");
 
   if (isGlobalRun) {
-    return `\n✅ Setup complete! You can now run:
-
-   npx translator-sync
-   # or
-   bunx translator-sync
-   # or
-   deno run -A npm:translator-sync`;
-  } else {
-    return `\n✅ Setup complete! 
-
-Add to your package.json scripts:
-   "translate": "translator-sync"
-
-Then run:
-   npm run translate
-   # or
-   bun run translate
-   # or
-   deno task translate`;
+    return "\n✅ Setup complete! You can now run:\n\n   npx translator-sync\n   # or\n   bunx translator-sync\n   # or\n   deno run -A npm:translator-sync";
   }
+
+  return '\n✅ Setup complete! \n\nAdd to your package.json scripts:\n   "translate": "translator-sync"\n\nThen run:\n   npm run translate\n   # or\n   bun run translate\n   # or\n   deno task translate';
 }
 
 /**

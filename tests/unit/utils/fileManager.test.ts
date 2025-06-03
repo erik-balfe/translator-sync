@@ -281,10 +281,21 @@ Line 3`;
     });
 
     test("handles relative paths", () => {
-      const currentDir = process.cwd();
+      // Create a subdirectory in temp and change to it
+      const subDir = path.join(tempDir, "testdir");
+      fs.mkdirSync(subDir);
 
-      const result = isDirectory(".");
-      expect(result).toBe(true);
+      // Test that the parent directory ".." is recognized as a directory
+      const originalCwd = process.cwd();
+      process.chdir(subDir);
+
+      try {
+        const result = isDirectory("..");
+        expect(result).toBe(true);
+      } finally {
+        // Always restore the original working directory
+        process.chdir(originalCwd);
+      }
     });
 
     test("handles symlinks to directories", () => {

@@ -137,10 +137,10 @@ export class FeedbackCollector {
       let comment: string | undefined;
       if (score <= 3) {
         console.log("\nWhat could we improve? (optional, press Enter to skip)");
-        comment = prompt("Brief feedback: ");
+        comment = prompt("Brief feedback: ") || undefined;
       } else {
         console.log("\nAny suggestions? (optional, press Enter to skip)");
-        comment = prompt("Brief feedback: ");
+        comment = prompt("Brief feedback: ") || undefined;
       }
 
       // Record the feedback anonymously
