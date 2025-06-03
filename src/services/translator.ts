@@ -9,6 +9,8 @@ export interface TranslationContext {
   tone?: string; // e.g., 'formal', 'casual', 'professional'
   preserveVariables?: boolean; // Maintain FTL variables like {$username}
   preserveLength?: boolean; // Whether to match original text length (UI elements) or allow natural expansion
+  preserveFormatting?: boolean; // Preserve whitespace and formatting
+  preserveHTMLTags?: boolean; // Preserve HTML tags in translations
   maxLength?: number; // Maximum character length for translations
   customInstructions?: string; // Free-form context instructions from refined project descriptions
 }

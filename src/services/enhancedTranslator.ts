@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { logger } from "../utils/logger.ts";
 import { ContextExtractor } from "./contextExtractor.ts";
-import type { TranslationService } from "./translator.ts";
+import type { TranslationContext, TranslationService } from "./translator.ts";
 
 /**
  * Enhanced translator that uses refined project descriptions for better translation context.
@@ -23,6 +23,7 @@ export class EnhancedTranslator {
     targetLang: string,
     texts: string[],
     refinedDescription?: string,
+    existingContext?: TranslationContext,
   ): Promise<Map<string, string>> {
     if (texts.length === 0) {
       return new Map();
@@ -35,11 +36,17 @@ export class EnhancedTranslator {
       logger.debug(`Using project context: ${contextInstructions.slice(0, 100)}...`);
     }
 
+    // Merge existing context with new context instructions
+    const combinedInstructions = [existingContext?.customInstructions, contextInstructions]
+      .filter(Boolean)
+      .join("\n\n");
+
     // Create dynamic translation context
     const translationContext = {
       preserveVariables: true,
-      // Add context as custom instructions rather than structured fields
-      customInstructions: contextInstructions,
+      ...existingContext, // Spread existing context first
+      // Add/override custom instructions
+      customInstructions: combinedInstructions || existingContext?.customInstructions,
     };
 
     // Perform translation with context
@@ -80,9 +87,22 @@ The translations should feel natural and appropriate for this specific project t
   }
 
   /**
+   * Standard translateBatch method that forwards to translateWithContext.
+   */
+  async translateBatch(
+    sourceLang: string,
+    targetLang: string,
+    texts: string[],
+    context?: TranslationContext,
+  ): Promise<Map<string, string>> {
+    return this.translateWithContext(sourceLang, targetLang, texts, undefined, context);
+  }
+
+  /**
    * Forward usage stats from underlying service.
    */
-  getUsageStats(): { inputTokens: number; outputTokens: number } | undefined {
-    return this.translationService.getUsageStats?.();
+  getUsageStats(): { inputTokens: number; outputTokens: number } {
+    const stats = this.translationService.getUsageStats?.();
+    return stats || { inputTokens: 0, outputTokens: 0 };
   }
 }

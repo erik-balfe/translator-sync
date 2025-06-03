@@ -101,7 +101,10 @@ describe("OpenAI Translation Provider", () => {
 
       expect(result.size).toBe(1);
       const translation = result.get("Hello world");
-      validateTranslation("Hello world", translation!);
+      expect(translation).toBeDefined();
+      if (translation) {
+        validateTranslation("Hello world", translation);
+      }
     });
 
     skipIfNoApiKey("preserves text order", async () => {
@@ -134,8 +137,11 @@ describe("OpenAI Translation Provider", () => {
 
       const result = await provider.translateBatch("en", "de", [text]);
 
-      const translation = result.get(text)!;
-      validateTranslation(text, translation, { preserveVariables: true });
+      const translation = result.get(text);
+      expect(translation).toBeDefined();
+      if (translation) {
+        validateTranslation(text, translation, { preserveVariables: true });
+      }
 
       // Check all variables are present
       expect(translation).toContain("{$firstName}");
@@ -166,8 +172,11 @@ describe("OpenAI Translation Provider", () => {
 
       const result = await provider.translateBatch("en", "es", [text]);
 
-      const translation = result.get(text)!;
-      validateTranslation(text, translation, { preserveVariables: true });
+      const translation = result.get(text);
+      expect(translation).toBeDefined();
+      if (translation) {
+        validateTranslation(text, translation, { preserveVariables: true });
+      }
 
       // Check HTML structure is preserved
       expect(translation).toContain("<p>");
@@ -187,12 +196,15 @@ This is line three.`;
 
       const result = await provider.translateBatch("en", "es", [multilineText]);
 
-      const translation = result.get(multilineText)!;
-      validateTranslation(multilineText, translation);
+      const translation = result.get(multilineText);
+      expect(translation).toBeDefined();
+      if (translation) {
+        validateTranslation(multilineText, translation);
+      }
 
       // Should maintain multiline structure
       const sourceLines = multilineText.split("\n").length;
-      const translationLines = translation.split("\n").length;
+      const translationLines = translation?.split("\n").length || 0;
       expect(translationLines).toBeGreaterThanOrEqual(sourceLines - 1); // Allow some flexibility
     });
   });
@@ -205,8 +217,11 @@ This is line three.`;
         domain: "technical",
       });
 
-      const translation = result.get(technicalText)!;
-      validateTranslation(technicalText, translation);
+      const translation = result.get(technicalText);
+      expect(translation).toBeDefined();
+      if (translation) {
+        validateTranslation(technicalText, translation);
+      }
     });
 
     skipIfNoApiKey("uses tone context", async () => {
@@ -220,8 +235,11 @@ This is line three.`;
         tone: "casual",
       });
 
-      const formalTranslation = formalResult.get(text)!;
-      const casualTranslation = casualResult.get(text)!;
+      const formalTranslation = formalResult.get(text);
+      const casualTranslation = casualResult.get(text);
+      expect(formalTranslation).toBeDefined();
+      expect(casualTranslation).toBeDefined();
+      if (!formalTranslation || !casualTranslation) return;
 
       validateTranslation(text, formalTranslation);
       validateTranslation(text, casualTranslation);
@@ -305,7 +323,7 @@ This is line three.`;
       expect(result.size).toBe(3);
 
       // Empty strings should have some translation (even if minimal)
-      const emptyTranslation = result.get("")!;
+      const emptyTranslation = result.get("");
       expect(emptyTranslation).toBeDefined();
     });
 
@@ -343,8 +361,11 @@ This is line three.`;
 
       const result = await provider.translateBatch("en", "es", [largeText]);
 
-      const translation = result.get(largeText)!;
-      validateTranslation(largeText, translation);
+      const translation = result.get(largeText);
+      expect(translation).toBeDefined();
+      if (translation) {
+        validateTranslation(largeText, translation);
+      }
     });
   });
 });

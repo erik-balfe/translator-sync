@@ -20,6 +20,14 @@ export interface UsageStats {
 }
 
 /**
+ * Usage statistics returned by translation services.
+ */
+export interface ServiceUsageStats {
+  inputTokens: number;
+  outputTokens: number;
+}
+
+/**
  * Cost calculation result.
  */
 export interface CostResult {
@@ -63,17 +71,37 @@ const MODEL_PRICING: Record<string, ModelPricing> = {
 /**
  * Calculate the cost of API usage based on token consumption.
  */
-export function calculateCost(model: string, usage: UsageStats): CostResult {
+export function calculateCost(model: string, usage: UsageStats): CostResult;
+export function calculateCost(model: string, usage: ServiceUsageStats): CostResult;
+export function calculateCost(model: string, usage: UsageStats | ServiceUsageStats): CostResult {
   const pricing = MODEL_PRICING[model];
 
   if (!pricing) {
     logger.warn(`Unknown model for pricing: ${model}. Using default pricing.`);
     // Use gpt-4.1-nano pricing as default
     const defaultPricing = MODEL_PRICING["gpt-4.1-nano"];
-    return calculateWithPricing(defaultPricing, usage);
+    const normalizedUsage: UsageStats =
+      "promptTokens" in usage
+        ? usage
+        : {
+            promptTokens: usage.inputTokens,
+            completionTokens: usage.outputTokens,
+            totalTokens: usage.inputTokens + usage.outputTokens,
+          };
+    return calculateWithPricing(defaultPricing, normalizedUsage);
   }
 
-  return calculateWithPricing(pricing, usage);
+  // Convert ServiceUsageStats to UsageStats if needed
+  const normalizedUsage: UsageStats =
+    "promptTokens" in usage
+      ? usage
+      : {
+          promptTokens: usage.inputTokens,
+          completionTokens: usage.outputTokens,
+          totalTokens: usage.inputTokens + usage.outputTokens,
+        };
+
+  return calculateWithPricing(pricing, normalizedUsage);
 }
 
 /**

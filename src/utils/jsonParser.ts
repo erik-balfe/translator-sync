@@ -125,7 +125,10 @@ export function serializeJsonContent(
     if (forceStructure) {
       structure = forceStructure;
     } else if (filePath && fileStructureCache.has(filePath)) {
-      structure = fileStructureCache.get(filePath)!;
+      const cachedStructure = fileStructureCache.get(filePath);
+      if (cachedStructure) {
+        structure = cachedStructure;
+      }
     } else {
       // Auto-detect: if any key contains a dot, assume it should be nested
       // unless all values indicate it should be flat
@@ -138,7 +141,7 @@ export function serializeJsonContent(
           // If we have keys like "user.name" and "user.email", it's likely nested
           return (
             parts.length > 1 &&
-            keyPatterns.some((otherKey) => otherKey.startsWith(parts[0] + ".") && otherKey !== key)
+            keyPatterns.some((otherKey) => otherKey.startsWith(`${parts[0]}.`) && otherKey !== key)
           );
         });
         structure = looksNested ? "nested" : "flat";
@@ -152,10 +155,10 @@ export function serializeJsonContent(
         result[key] = value;
       }
       return JSON.stringify(result, null, 2);
-    } else {
-      const nested = unflattenJson(translations);
-      return JSON.stringify(nested, null, 2);
     }
+
+    const nested = unflattenJson(translations);
+    return JSON.stringify(nested, null, 2);
   } catch (error) {
     logger.error(`Failed to serialize JSON content: ${error}`);
     throw new Error(`Failed to serialize translations: ${error}`);

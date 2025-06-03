@@ -11,6 +11,7 @@ import type { ProviderConfig, TranslationContext, TranslationService } from "./t
 export interface DeepSeekConfig extends ProviderConfig {
   model?: string; // defaults to 'deepseek-chat'
   temperature?: number; // defaults to 0.1 for consistent translations
+  client?: OpenAI; // Optional client for testing
 }
 
 /**
@@ -32,12 +33,15 @@ export class DeepSeekProvider implements TranslationService {
       ...config,
     };
 
-    this.client = new OpenAI({
-      apiKey: this.config.apiKey,
-      baseURL: this.config.baseURL,
-      timeout: this.config.timeout,
-      maxRetries: this.config.maxRetries,
-    });
+    // Use provided client for testing or create new one
+    this.client =
+      config.client ||
+      new OpenAI({
+        apiKey: this.config.apiKey,
+        baseURL: this.config.baseURL,
+        timeout: this.config.timeout,
+        maxRetries: this.config.maxRetries,
+      });
   }
 
   async translateBatch(

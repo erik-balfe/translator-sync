@@ -124,13 +124,18 @@ if (!mainFile) {
 // Async main function.
 async function main() {
   // Read and parse the main language file.
-  const englishContent = await readFile(mainFile!);
-  const englishTranslations = parseTranslationFile(path.basename(mainFile!), englishContent);
+  if (!mainFile) {
+    logger.error("Main file not found. This should not happen.");
+    process.exit(1);
+  }
+
+  const englishContent = await readFile(mainFile);
+  const englishTranslations = parseTranslationFile(path.basename(mainFile), englishContent);
   if (englishTranslations.size === 0) {
     logger.error("No keys found in main language file. Aborting.");
     process.exit(1);
   }
-  logger.info(`Loaded ${englishTranslations.size} keys from ${path.basename(mainFile!)}`);
+  logger.info(`Loaded ${englishTranslations.size} keys from ${path.basename(mainFile)}`);
 
   // Initialize the translation service.
   // Create translation service based on environment variables or default to mock
@@ -138,7 +143,7 @@ async function main() {
 
   // Process all supported translation files except the main language file.
   const allItems = await listFiles(dirPath);
-  const mainFileName = path.basename(mainFile!);
+  const mainFileName = path.basename(mainFile);
   const files = allItems.filter((file) => isSupportedFile(file) && file !== mainFileName);
 
   for (const file of files) {

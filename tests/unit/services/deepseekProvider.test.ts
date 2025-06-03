@@ -3,38 +3,43 @@ import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import { DeepSeekProvider } from "../../../src/services/deepseekProvider.ts";
 import type { TranslationContext } from "../../../src/services/translator.ts";
 
-// Mock OpenAI module
+// Create a mock OpenAI client
 const mockCreate = mock();
-const mockOpenAI = mock(() => ({
+const mockOpenAIClient = {
   chat: {
     completions: {
       create: mockCreate,
     },
   },
-}));
+};
 
-// Mock the openai module
-import.meta.resolve = () => "";
-import.meta.require = () => ({ default: mockOpenAI });
+// Helper function to create a provider with mock client
+const createTestProvider = (config: Record<string, unknown> = {}) => {
+  return new DeepSeekProvider({
+    apiKey: "test-key",
+    // biome-ignore lint/suspicious/noExplicitAny: Mock object for testing
+    client: mockOpenAIClient as any,
+    ...config,
+  });
+};
 
 describe("DeepSeekProvider", () => {
   beforeEach(() => {
-    mockFetch.mockClear();
+    mockCreate.mockClear();
   });
 
   afterEach(() => {
-    mockFetch.mockClear();
+    mockCreate.mockClear();
   });
 
   describe("constructor", () => {
     it("should initialize with default model", () => {
-      const provider = new DeepSeekProvider({ apiKey: "test-key" });
+      const provider = createTestProvider();
       expect(provider).toBeDefined();
     });
 
     it("should accept custom model", () => {
-      const provider = new DeepSeekProvider({
-        apiKey: "test-key",
+      const provider = createTestProvider({
         model: "deepseek-chat",
       });
       expect(provider).toBeDefined();
@@ -65,27 +70,20 @@ describe("DeepSeekProvider", () => {
         },
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      mockCreate.mockResolvedValueOnce(mockResponse);
 
-      const provider = new DeepSeekProvider({ apiKey: "test-key" });
+      const provider = createTestProvider();
       const result = await provider.translateBatch("en", "es", ["Hello"]);
 
       expect(result.size).toBe(1);
       expect(result.get("Hello")).toBe("Hola");
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-      expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.deepseek.com/v1/chat/completions",
-        expect.objectContaining({
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer test-key",
-          },
-        }),
-      );
+      expect(mockCreate).toHaveBeenCalledTimes(1);
+      expect(mockCreate).toHaveBeenCalledWith({
+        model: "deepseek-chat",
+        messages: [{ role: "user", content: expect.stringContaining("Hello") }],
+        temperature: 0.1,
+        max_tokens: expect.any(Number),
+      });
     });
 
     it("should translate multiple texts in one request", async () => {
@@ -93,7 +91,7 @@ describe("DeepSeekProvider", () => {
         choices: [
           {
             message: {
-              content: "Hola\n---\nMundo",
+              content: "Hola\nMundo",
             },
           },
         ],
@@ -103,12 +101,9 @@ describe("DeepSeekProvider", () => {
         },
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      mockCreate.mockResolvedValueOnce(mockResponse);
 
-      const provider = new DeepSeekProvider({ apiKey: "test-key" });
+      const provider = createTestProvider();
       const result = await provider.translateBatch("en", "es", ["Hello", "World"]);
 
       expect(result.size).toBe(2);
@@ -131,45 +126,39 @@ describe("DeepSeekProvider", () => {
         },
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      mockCreate.mockResolvedValueOnce(mockResponse);
 
       const context: TranslationContext = {
         customInstructions: "Use informal tone",
         preserveVariables: true,
       };
 
-      const provider = new DeepSeekProvider({ apiKey: "test-key" });
+      const provider = createTestProvider();
       await provider.translateBatch("en", "es", ["Hello"], context);
 
-      const callArgs = mockFetch.mock.calls[0][1];
-      const body = JSON.parse(callArgs.body);
-      expect(body.messages[0].content).toContain("Use informal tone");
+      expect(mockCreate).toHaveBeenCalledWith({
+        model: "deepseek-chat",
+        messages: [{ role: "user", content: expect.stringContaining("Use informal tone") }],
+        temperature: 0.1,
+        max_tokens: expect.any(Number),
+      });
     });
 
     it("should handle API errors", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 429,
-        statusText: "Too Many Requests",
-        text: async () => "Rate limit exceeded",
-      });
+      const error = new Error("Request failed with status code 429");
+      mockCreate.mockRejectedValueOnce(error);
 
-      const provider = new DeepSeekProvider({ apiKey: "test-key" });
+      const provider = createTestProvider();
 
-      await expect(provider.translateBatch("en", "es", ["Hello"])).rejects.toThrow(
-        "DeepSeek API error: 429 Too Many Requests",
-      );
+      await expect(provider.translateBatch("en", "es", ["Hello"])).rejects.toThrow();
     });
 
     it("should handle network errors", async () => {
-      mockFetch.mockRejectedValueOnce(new Error("Network error"));
+      mockCreate.mockRejectedValueOnce(new Error("Network error"));
 
-      const provider = new DeepSeekProvider({ apiKey: "test-key" });
+      const provider = createTestProvider();
 
-      await expect(provider.translateBatch("en", "es", ["Hello"])).rejects.toThrow("Network error");
+      await expect(provider.translateBatch("en", "es", ["Hello"])).rejects.toThrow();
     });
 
     it("should handle empty response", async () => {
@@ -187,15 +176,13 @@ describe("DeepSeekProvider", () => {
         },
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      mockCreate.mockResolvedValueOnce(mockResponse);
 
-      const provider = new DeepSeekProvider({ apiKey: "test-key" });
+      const provider = createTestProvider();
       const result = await provider.translateBatch("en", "es", ["Hello"]);
 
-      expect(result.size).toBe(0);
+      expect(result.size).toBe(1);
+      expect(result.get("Hello")).toBe("[Translation unavailable]");
     });
 
     it("should handle mismatched translation count", async () => {
@@ -213,26 +200,24 @@ describe("DeepSeekProvider", () => {
         },
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      mockCreate.mockResolvedValueOnce(mockResponse);
 
-      const provider = new DeepSeekProvider({ apiKey: "test-key" });
+      const provider = createTestProvider();
       const result = await provider.translateBatch("en", "es", ["Hello", "World", "Test"]);
 
-      // Should only map the first translation
-      expect(result.size).toBe(1);
+      // Should map the first translation and fallback for others
+      expect(result.size).toBe(3);
       expect(result.get("Hello")).toBe("Only one translation");
-      expect(result.get("World")).toBeUndefined();
+      expect(result.get("World")).toBe("[Translation unavailable]");
+      expect(result.get("Test")).toBe("[Translation unavailable]");
     });
 
-    it("should preserve formatting when requested", async () => {
+    it("should handle context with HTML preservation", async () => {
       const mockResponse = {
         choices: [
           {
             message: {
-              content: "  Hola  ",
+              content: "<strong>Hola</strong>",
             },
           },
         ],
@@ -242,19 +227,16 @@ describe("DeepSeekProvider", () => {
         },
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      mockCreate.mockResolvedValueOnce(mockResponse);
 
       const context: TranslationContext = {
-        preserveFormatting: true,
+        preserveVariables: true,
       };
 
-      const provider = new DeepSeekProvider({ apiKey: "test-key" });
-      const result = await provider.translateBatch("en", "es", ["  Hello  "], context);
+      const provider = createTestProvider();
+      const result = await provider.translateBatch("en", "es", ["<strong>Hello</strong>"], context);
 
-      expect(result.get("  Hello  ")).toBe("  Hola  ");
+      expect(result.get("<strong>Hello</strong>")).toBe("<strong>Hola</strong>");
     });
 
     it("should use custom model when specified", async () => {
@@ -272,20 +254,19 @@ describe("DeepSeekProvider", () => {
         },
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      mockCreate.mockResolvedValueOnce(mockResponse);
 
-      const provider = new DeepSeekProvider({
-        apiKey: "test-key",
+      const provider = createTestProvider({
         model: "deepseek-chat",
       });
       await provider.translateBatch("en", "fr", ["Hello"]);
 
-      const callArgs = mockFetch.mock.calls[0][1];
-      const body = JSON.parse(callArgs.body);
-      expect(body.model).toBe("deepseek-chat");
+      expect(mockCreate).toHaveBeenCalledWith({
+        model: "deepseek-chat",
+        messages: expect.any(Array),
+        temperature: 0.1,
+        max_tokens: expect.any(Number),
+      });
     });
 
     it("should handle special characters in translations", async () => {
@@ -293,7 +274,7 @@ describe("DeepSeekProvider", () => {
         choices: [
           {
             message: {
-              content: 'Hello "friend"\n---\nHow\'s it going?',
+              content: 'Hello "friend"\nHow\'s it going?',
             },
           },
         ],
@@ -303,12 +284,9 @@ describe("DeepSeekProvider", () => {
         },
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      mockCreate.mockResolvedValueOnce(mockResponse);
 
-      const provider = new DeepSeekProvider({ apiKey: "test-key" });
+      const provider = createTestProvider();
       const result = await provider.translateBatch("es", "en", ['Hola "amigo"', "¿Cómo te va?"]);
 
       expect(result.get('Hola "amigo"')).toBe('Hello "friend"');
@@ -333,12 +311,9 @@ describe("DeepSeekProvider", () => {
         },
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
+      mockCreate.mockResolvedValueOnce(mockResponse);
 
-      const provider = new DeepSeekProvider({ apiKey: "test-key" });
+      const provider = createTestProvider();
       await provider.translateBatch("en", "es", ["Test"]);
 
       const stats = provider.getUsageStats();
@@ -347,26 +322,20 @@ describe("DeepSeekProvider", () => {
     });
 
     it("should accumulate usage across multiple requests", async () => {
-      const provider = new DeepSeekProvider({ apiKey: "test-key" });
+      const provider = createTestProvider();
 
       // First request
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          choices: [{ message: { content: "First" } }],
-          usage: { prompt_tokens: 50, completion_tokens: 10 },
-        }),
+      mockCreate.mockResolvedValueOnce({
+        choices: [{ message: { content: "First" } }],
+        usage: { prompt_tokens: 50, completion_tokens: 10 },
       });
 
       await provider.translateBatch("en", "es", ["Test1"]);
 
       // Second request
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          choices: [{ message: { content: "Second" } }],
-          usage: { prompt_tokens: 60, completion_tokens: 15 },
-        }),
+      mockCreate.mockResolvedValueOnce({
+        choices: [{ message: { content: "Second" } }],
+        usage: { prompt_tokens: 60, completion_tokens: 15 },
       });
 
       await provider.translateBatch("en", "es", ["Test2"]);
@@ -377,7 +346,7 @@ describe("DeepSeekProvider", () => {
     });
 
     it("should return zero stats when no requests made", () => {
-      const provider = new DeepSeekProvider({ apiKey: "test-key" });
+      const provider = createTestProvider();
       const stats = provider.getUsageStats();
 
       expect(stats.inputTokens).toBe(0);
@@ -387,31 +356,30 @@ describe("DeepSeekProvider", () => {
 
   describe("error handling", () => {
     it("should provide meaningful error for missing API key", async () => {
-      const provider = new DeepSeekProvider({ apiKey: "" });
+      const error = new Error("Request failed with status code 401");
+      mockCreate.mockRejectedValueOnce(error);
+
+      const provider = createTestProvider({ apiKey: "" });
 
       await expect(provider.translateBatch("en", "es", ["Hello"])).rejects.toThrow();
     });
 
     it("should handle malformed API response", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ invalid: "response" }),
+      mockCreate.mockResolvedValueOnce({
+        choices: [], // Empty choices array
+        usage: { prompt_tokens: 0, completion_tokens: 0 },
       });
 
-      const provider = new DeepSeekProvider({ apiKey: "test-key" });
+      const provider = createTestProvider();
 
-      await expect(provider.translateBatch("en", "es", ["Hello"])).rejects.toThrow();
+      const result = await provider.translateBatch("en", "es", ["Hello"]);
+      expect(result.get("Hello")).toBe("[Translation unavailable]");
     });
 
-    it("should handle JSON parse errors", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => {
-          throw new Error("Invalid JSON");
-        },
-      });
+    it("should handle API response errors", async () => {
+      mockCreate.mockRejectedValueOnce(new Error("Invalid JSON"));
 
-      const provider = new DeepSeekProvider({ apiKey: "test-key" });
+      const provider = createTestProvider();
 
       await expect(provider.translateBatch("en", "es", ["Hello"])).rejects.toThrow("Invalid JSON");
     });

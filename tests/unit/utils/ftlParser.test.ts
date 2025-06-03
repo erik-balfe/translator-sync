@@ -278,8 +278,8 @@ another random line`;
 
     test("handles null and undefined gracefully", () => {
       // TypeScript should prevent this, but test runtime behavior
-      expect(() => parseFTLContent(null as any)).toThrow();
-      expect(() => parseFTLContent(undefined as any)).toThrow();
+      expect(() => parseFTLContent(null as unknown as string)).toThrow();
+      expect(() => parseFTLContent(undefined as unknown as string)).toThrow();
     });
 
     test("handles very large content", () => {
