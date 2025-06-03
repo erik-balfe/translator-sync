@@ -25,6 +25,22 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Verify release is from master branch
+        shell: bash
+        run: |
+          # Check if we're on master branch
+          if [ "$GITHUB_REF_NAME" != "master" ]; then
+            echo "❌ ERROR: Releases must be created from the 'master' branch"
+            echo "Current ref: $GITHUB_REF_NAME"
+            echo ""
+            echo "Correct workflow:"
+            echo "1. Merge your PR to master first"
+            echo "2. git checkout master && git pull"
+            echo "3. git tag v0.2.1 && git push origin v0.2.1"
+            exit 1
+          fi
+          echo "✅ Release is being created from master branch"
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:

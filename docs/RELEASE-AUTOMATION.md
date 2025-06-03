@@ -114,18 +114,38 @@ bun run release:finalize 0.2.1
 
 #### Tag-based Release:
 ```bash
-# Update package.json version
+# IMPORTANT: Must be on master branch!
+# 1. First merge your PR to master
+# 2. Switch to master branch
+jj edit master  # or: git checkout master && git pull
+
+# 3. Update package.json version
 jj commit -m "chore: bump version to 0.2.1"
 
-# Create and push tag
+# 4. Create and push tag FROM MASTER
 git tag v0.2.1
 git push origin v0.2.1
 
 # GitHub Actions automatically:
+# - Verifies release is from master branch
 # - Runs all quality checks
 # - Builds the project  
 # - Creates GitHub release
 # - Publishes to NPM
+```
+
+#### ⚠️ **Common Mistake to Avoid:**
+**Never tag feature branches!** Always merge to master first, then tag master.
+
+```bash
+# ❌ WRONG: Tagging feature branch
+git checkout feature-branch
+git tag v0.2.1  # This will release from feature branch!
+
+# ✅ CORRECT: Tag master branch
+git checkout master
+git pull origin master
+git tag v0.2.1
 ```
 
 #### Manual Trigger:

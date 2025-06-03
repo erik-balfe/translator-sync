@@ -177,6 +177,20 @@ finalize_release() {
     
     log_info "Finalizing release v$version"
     
+    # Check if we're on master branch
+    local current_branch=$(jj log -r @ --no-graph -T 'branches' 2>/dev/null || echo "unknown")
+    if [[ "$current_branch" != *"master"* ]]; then
+        log_error "Releases must be created from the 'master' branch"
+        echo "Current branch: $current_branch"
+        echo ""
+        echo "Correct workflow:"
+        echo "1. Merge your PR to master first"
+        echo "2. jj edit master"
+        echo "3. Run: $0 finalize $version"
+        exit 1
+    fi
+    log_info "✅ On master branch, proceeding with release"
+    
     # Check if release notes exist
     if [ ! -f "docs/releases/v$version.md" ]; then
         log_error "Release notes not found: docs/releases/v$version.md"
