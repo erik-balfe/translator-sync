@@ -83,14 +83,15 @@ jobs:
         shell: bash
         run: |
           # Run unit tests with coverage
-          bun test --coverage tests/unit/ > coverage-report.txt
+          bun test --coverage tests/unit/ > coverage-report.txt 2>&1
           
-          # Extract coverage percentage (this is pseudo-code, adjust based on actual output)
-          COVERAGE=$(grep -oP 'All files\s+\|\s+\K[0-9.]+' coverage-report.txt || echo "0")
+          # Extract coverage percentage from Bun's table format
+          # Look for "All files" line and extract the % Lines column (3rd column)
+          COVERAGE=$(grep "All files" coverage-report.txt | awk -F'|' '{print $3}' | awk '{print $1}' || echo "0")
           
           echo "Test coverage: ${COVERAGE}%"
           
-          # Fail if coverage is below threshold (e.g., 50%)
+          # Fail if coverage is below threshold (50%)
           if (( $(echo "$COVERAGE < 50" | bc -l) )); then
             echo "❌ Test coverage ${COVERAGE}% is below the required threshold of 50%"
             exit 1
