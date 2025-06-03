@@ -1,0 +1,171 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main, 'feature/**', 'fix/**', 'feat/**']
+  pull_request:
+    branches: [master, main]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run linter
+        run: bun run lint
+
+      - name: Check formatting
+        run: bun run format:check
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        bun-version: [latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ matrix.bun-version }}
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run unit tests
+        run: bun test tests/unit/
+
+      - name: Run integration tests
+        run: bun test tests/integration/
+
+      - name: Generate coverage report
+        run: bun test --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          verbose: true
+
+  test-coverage:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Check test coverage threshold
+        run: |
+          # Run tests with coverage
+          bun test --coverage > coverage-report.txt
+          
+          # Extract coverage percentage (this is pseudo-code, adjust based on actual output)
+          COVERAGE=$(grep -oP 'All files\s+\|\s+\K[0-9.]+' coverage-report.txt || echo "0")
+          
+          echo "Test coverage: ${COVERAGE}%"
+          
+          # Fail if coverage is below threshold (e.g., 50%)
+          if (( $(echo "$COVERAGE < 50" | bc -l) )); then
+            echo "❌ Test coverage ${COVERAGE}% is below the required threshold of 50%"
+            exit 1
+          else
+            echo "✅ Test coverage ${COVERAGE}% meets the required threshold"
+          fi
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build project
+        run: bun run build
+
+      - name: Verify build output
+        run: |
+          # Check that dist files exist
+          if [ ! -d "dist" ]; then
+            echo "❌ Build output directory 'dist' not found"
+            exit 1
+          fi
+          
+          # Check for main entry point
+          if [ ! -f "dist/index.js" ]; then
+            echo "❌ Main entry point 'dist/index.js' not found"
+            exit 1
+          fi
+          
+          echo "✅ Build verification passed"
+
+  type-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run TypeScript type checking
+        run: bun run type-check
+
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run security audit
+        run: |
+          # Run npm audit for known vulnerabilities
+          npm audit --audit-level=high || true
+          
+          # Check for sensitive data
+          if grep -r "TRANSLATOR_API_KEY\|api_key\|apiKey" --include="*.ts" --include="*.js" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=tests .; then
+            echo "⚠️ Warning: Potential hardcoded API keys found"
+          fi

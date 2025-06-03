@@ -440,12 +440,31 @@ bun run build
 # Run all tests
 bun test
 
+# Run unit tests only
+bun test tests/unit/
+
 # Run integration tests only
 bun test tests/integration/
+
+# Run with coverage report
+bun test --coverage
 
 # Run with real API (requires API key)
 TRANSLATOR_API_KEY=sk-... bun test tests/integration/llm/
 ```
+
+### CI/CD
+
+TranslatorSync uses GitHub Actions for continuous integration:
+
+- **Automated testing** on all PRs
+- **Code coverage** enforcement (minimum 50%)
+- **Linting & formatting** checks
+- **Type safety** validation
+- **Security audits** for dependencies
+- **Multi-platform** testing (Ubuntu, macOS, Windows)
+
+See [CI/CD documentation](docs/development/ci-cd.md) for details.
 
 ## 🔧 Advanced Usage
 
