@@ -5,6 +5,8 @@
 🎯 **9.3/10 quality** • ⚡ **1000x faster than manual** • 💰 **50,000x cheaper than services**
 
 [![npm version](https://badge.fury.io/js/translator-sync.svg)](https://www.npmjs.com/package/translator-sync)
+[![Test Coverage](https://img.shields.io/badge/coverage-92.14%25-brightgreen.svg)](https://github.com/erik-balfe/translator-sync/actions)
+[![CI Status](https://github.com/erik-balfe/translator-sync/workflows/CI/badge.svg)](https://github.com/erik-balfe/translator-sync/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## ✨ Why TranslatorSync?
