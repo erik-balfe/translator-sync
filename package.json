@@ -1,8 +1,8 @@
 {
   "name": "translator-sync",
   "version": "0.2.1",
-  "description": "AI-powered i18n translation file synchronization supporting JSON and Fluent formats",
-  "keywords": ["i18n", "translation", "localization", "react", "vue", "fluent", "openai", "gpt"],
+  "description": "Automate React/Vue i18n translation workflow with AI. Sync translation files automatically, reduce costs 50,000x vs services. Works with react-i18next, vue-i18n, JSON, Fluent.",
+  "keywords": ["react-i18n", "vue-i18n", "i18next", "translation-automation", "localization-tool", "i18n-workflow", "translation-sync", "react-translation", "vue-translation", "i18n-cli", "translation-cli", "automated-translation", "i18n", "translation", "localization", "react", "vue", "nextjs", "ai", "openai"],
   "homepage": "https://github.com/erik-balfe/translator-sync",
   "bugs": "https://github.com/erik-balfe/translator-sync/issues",
   "license": "MIT",

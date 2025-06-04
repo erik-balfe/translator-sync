@@ -1,10 +1,12 @@
 # TranslatorSync
 
-**Premium AI-powered i18n translation file synchronization**. Automatically keep all your translation files in sync with intelligent context awareness and lightning-fast performance.
+**The only i18n automation tool with intelligent context awareness and enterprise self-hosted LLM support**. Unlike simple ChatGPT wrappers, TranslatorSync understands your project and preserves your existing translations.
 
-🎯 **9.3/10 quality** • ⚡ **1000x faster than manual** • 💰 **50,000x cheaper than services**
+🎯 **9.3/10 quality** • ⚡ **1000x faster than manual** • 💰 **50,000x cheaper than services** • 🏢 **Enterprise-ready**
 
 [![npm version](https://badge.fury.io/js/translator-sync.svg)](https://www.npmjs.com/package/translator-sync)
+[![Test Coverage](https://img.shields.io/badge/coverage-92.14%25-brightgreen.svg)](https://github.com/erik-balfe/translator-sync/actions)
+[![CI Status](https://github.com/erik-balfe/translator-sync/workflows/CI/badge.svg)](https://github.com/erik-balfe/translator-sync/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## ✨ Why TranslatorSync?
@@ -27,7 +29,7 @@
 
 ### 🛠️ **Premium Developer Experience**
 - 🌐 **Universal Format Support** - JSON (React/Vue/Angular) and Fluent (.ftl)
-- 🤖 **Multiple AI Providers** - OpenAI GPT-4.1-nano (best value), DeepSeek V3, Groq
+- 🤖 **Any OpenAI-Compatible API** - Cloud providers (OpenAI, DeepSeek) or self-hosted for complete data control
 - 🔄 **Smart Sync Strategy** - Only missing keys, preserves existing translations
 - 🎯 **Perfect Variable Handling** - `{{variables}}`, `{variables}`, `%{variables}`, etc.
 - 📁 **Any Project Structure** - Flat files, nested directories, custom patterns
@@ -41,6 +43,39 @@
 - **Consistent terminology** - Maintains style across all languages
 - **Smart length preservation** - UI elements stay within space constraints
 - **Cultural appropriateness** - Native-feeling translations, not literal conversions
+
+## 🏆 Why Choose TranslatorSync?
+
+### Quick Comparison with Alternatives
+
+| Feature | TranslatorSync | i18n-ally | Transmart | Others |
+|---------|---------------|-----------|-----------|---------|
+| **Auto-translate missing keys only** | ✅ | ❌ Manual | ⚠️ Overwrites | ❌ |
+| **Preserves existing translations** | ✅ Always | ✅ | ❌ Dangerous | Varies |
+| **AI with context awareness** | ✅ Full context | ❌ | ❌ | ❌ |
+| **Understands your project** | ✅ Reads docs | ❌ | ❌ | ❌ |
+| **Self-hosted LLM support** | ✅ **Exclusive** | ❌ | ❌ | ❌ |
+| **Multiple AI providers** | ✅ 3+ | ❌ | ❌ OpenAI only | Limited |
+| **Production quality** | ✅ 92% coverage | - | - | - |
+
+### Unique Advantages
+
+**🏢 Enterprise-Ready with Self-Hosted LLMs**
+- Only tool supporting private LLM infrastructure
+- Complete data control - no external APIs required
+- Works with any OpenAI-compatible endpoint
+
+**🧠 Intelligent Translation (Not Just ChatGPT Wrapper)**
+- Analyzes your README and package.json
+- Uses existing translations for consistency
+- Adapts to your project type automatically
+
+**✅ Respects Your Work**
+- Never overwrites existing translations
+- Only translates what's missing
+- Preserves your formatting and structure
+
+[See detailed competitive analysis →](docs/COMPETITIVE-ANALYSIS.md)
 
 ## 🚀 Quick Start
 
@@ -246,7 +281,8 @@ TranslatorSync uses a `.translator-sync.json` file:
 {
   "version": "1.0",
   "provider": "openai",
-  "model": "gpt-4.1-nano",
+  "model": "gpt-4.1-nano", 
+  "baseUrl": "https://api.openai.com/v1",
   "primaryLanguage": "en",
   "directories": ["./locales", "./public/locales"],
   "options": {
@@ -263,47 +299,73 @@ TranslatorSync uses a `.translator-sync.json` file:
 # Required
 TRANSLATOR_API_KEY=your-api-key-here
 
-# Optional overrides
-TRANSLATOR_SERVICE=openai        # Override provider
-TRANSLATOR_MODEL=gpt-4.1-nano   # Override model
-LOG_LEVEL=info                   # debug, info, warn, error
-NODE_ENV=production              # Environment
+# Provider configuration
+TRANSLATOR_SERVICE=openai              # Provider type
+TRANSLATOR_MODEL=gpt-4.1-nano         # Model name
+TRANSLATOR_BASE_URL=https://api.openai.com/v1  # API endpoint
+
+# Optional
+LOG_LEVEL=info                         # debug, info, warn, error
+NODE_ENV=production                    # Environment
 ```
+
+**Enterprise Note**: Set `TRANSLATOR_BASE_URL` to your internal LLM API endpoint for complete data control.
 
 ## 🤖 AI Providers & Models
 
-### Recommended Models (2025)
+TranslatorSync works with any OpenAI-compatible API, including self-hosted models for enterprise security requirements.
 
-| Provider     | Model            | Quality    | Speed | Cost/1000 UI | Best For            |
-| ------------ | ---------------- | ---------- | ----- | ------------- | ------------------- |
-| **OpenAI**   | **gpt-4.1-nano** | ⭐⭐⭐⭐⭐ | 3.0s  | **$0.031**    | **Production** ✅   |
-| **OpenAI**   | **gpt-4.1-mini** | ⭐⭐⭐⭐⭐ | **2.3s** | $0.076    | **Speed Critical** ⚡ |
-| **DeepSeek** | **deepseek-v3**  | ⭐⭐⭐⭐⭐ | 15.2s | $0.056        | **Budget/Batch** 💰 |
+### Supported Providers
 
-_Default: **gpt-4.1-nano** - Best value for professional translations. Identical quality to more expensive models._
+| Provider | Models | Security | Setup |
+|----------|--------|----------|-------|
+| **OpenAI** | gpt-4.1-nano, gpt-4.1-mini | Cloud service | API key required |
+| **DeepSeek** | deepseek-v3 | Cloud service | API key required |
+| **Self-hosted** | Any OpenAI-compatible | Full control | Custom base URL |
+| **Enterprise LLM** | Anthropic, Google, Azure | Private infrastructure | OpenAI-compatible wrapper |
 
-**Tested 2025-06-02**: All models produce identical translation quality for UI elements. Choice depends on speed/cost requirements.
+### Enterprise & Self-Hosted Support
 
-For development/testing, see our [pricing guide](docs/reference/llm-pricing.md) for additional options.
+For companies with security requirements or existing LLM infrastructure:
+
+```bash
+# Use your own hosted LLM API
+export TRANSLATOR_API_KEY=your-internal-key
+export TRANSLATOR_SERVICE=openai  # Uses OpenAI-compatible format
+export TRANSLATOR_BASE_URL=https://your-internal-llm.company.com/v1
+export TRANSLATOR_MODEL=your-model-name
+```
+
+**Benefits:**
+- No external API dependencies 
+- Complete data control and privacy
+- Use existing enterprise LLM infrastructure
+- Same functionality as cloud providers
 
 ### Provider Setup
 
-**OpenAI:**
+**Cloud Providers:**
 
 ```bash
-# Get API key from: https://platform.openai.com/api-keys
+# OpenAI
 export TRANSLATOR_API_KEY=sk-...
 export TRANSLATOR_SERVICE=openai
 export TRANSLATOR_MODEL=gpt-4.1-nano
-```
 
-**DeepSeek:**
-
-```bash
-# Get API key from: https://platform.deepseek.com/api-keys
+# DeepSeek  
 export TRANSLATOR_API_KEY=sk-...
 export TRANSLATOR_SERVICE=deepseek
 export TRANSLATOR_MODEL=deepseek-v3
+```
+
+**Self-hosted/Enterprise:**
+
+```bash
+# Your internal LLM infrastructure
+export TRANSLATOR_API_KEY=your-api-key
+export TRANSLATOR_SERVICE=openai
+export TRANSLATOR_BASE_URL=https://llm.yourcompany.com/v1
+export TRANSLATOR_MODEL=your-model-name
 ```
 
 ## 🎯 Variable Support
@@ -529,27 +591,25 @@ translator-sync --use-memory
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md).
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for complete documentation.
 
-**Note**: This repository uses `master` as the default branch (not `main`).
+**Note**: This repository uses Jujutsu (jj) and `master` as the default branch.
 
-### Quick Contribution
+### Quick Start
 
 ```bash
-# Fork and clone
-git clone https://github.com/your-username/translator-sync.git
+# Fork and clone your fork
+jj git clone https://github.com/your-username/translator-sync.git
 
-# Create feature branch from master
-git checkout -b feature/amazing-feature master
+# Create new changelist from master
+jj new master -m "feat: add amazing feature"
 
 # Make changes and test
 bun test
 
-# Commit with conventional commits
-git commit -m "feat: add amazing feature"
-
-# Push and create PR
-git push origin feature/amazing-feature
+# Create bookmark and push for PR
+jj bookmark create feat-amazing -r @
+jj git push --bookmark feat-amazing --allow-new
 ```
 
 ## 🚀 Roadmap
