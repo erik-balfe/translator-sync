@@ -33,6 +33,7 @@
     "test:coverage": "bun test --coverage",
     "type-check": "tsc --noEmit",
     "security-check": "grep -r -E '(sk-[a-zA-Z0-9]{32,}|api[_-]?key[[:space:]]*[:=][[:space:]]*[a-zA-Z0-9_-]{20,}|npm_[a-zA-Z0-9]{36})' --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git --exclude='*.md' --exclude='.env*' --include='*.ts' --include='*.js' --include='*.json' . 2>/dev/null || echo '✅ No API keys detected in code files'",
+    "jsr-check": "npx jsr publish --dry-run --allow-dirty",
     "release:prepare": "scripts/release-helper.sh prepare",
     "release:finalize": "scripts/release-helper.sh finalize",
     "release:add-change": "scripts/release-helper.sh add-change",
