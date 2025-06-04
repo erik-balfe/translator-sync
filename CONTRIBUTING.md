@@ -1,181 +1,198 @@
-# Contributing & Roadmap
+# Contributing to TranslatorSync
 
-This document serves as the roadmap and guide for further development. Use it as a checklist to track progress and new ideas.
+Welcome to TranslatorSync! We're excited to have you contribute to making i18n automation better for everyone. 🌍
 
-## 🔐 Security Requirements
+## 🚀 Quick Start
 
-**CRITICAL: Before contributing, read [docs/SECURITY-API-KEYS.md](docs/SECURITY-API-KEYS.md)**
-
-### Pre-commit Setup (Recommended)
+### First-Time Setup
 ```bash
-# Install the pre-commit hook to prevent accidental API key commits
-cp scripts/pre-commit-hook.sh .git/hooks/pre-commit
-chmod +x .git/hooks/pre-commit
+# 1. Fork the repo on GitHub, then clone your fork
+jj git clone https://github.com/YOUR-USERNAME/translator-sync.git
+cd translator-sync
+
+# 2. Install dependencies
+bun install
+
+# 3. Run tests to verify setup
+bun test
+
+# 4. You're ready to contribute!
 ```
 
-### Before Every Commit
-1. Run `bun run security-check` to scan for exposed API keys
-2. Never commit real API keys, even in documentation
-3. Use `.env` for local development (already gitignored)
-4. Use placeholders like `sk-XXXXXX...` in examples
+### Development Workflow
+We use **Jujutsu (jj)** for version control with a changelist-based workflow:
 
-## 📦 Release Process
-
-This project uses an automated release system. See [docs/RELEASE-AUTOMATION.md](docs/RELEASE-AUTOMATION.md) for full details.
-
-### Quick Start:
 ```bash
-# Add changes during development
-bun run release:add-change
+# Start a new feature
+jj new master -m "feat: add yaml translation support"
 
-# When ready for release
-bun run release:prepare 0.2.1
-bun run release:finalize 0.2.1
+# Make your changes, then describe them
+jj describe -m "feat: add YAML format support
+
+- Add yamlParser utility with error handling
+- Integrate with universalParser  
+- Add comprehensive tests
+- Update CLI to support .yaml/.yml extensions"
+
+# Create bookmark and push for PR
+jj bookmark create feat-yaml-support -r @
+jj git push --bookmark feat-yaml-support --allow-new
 ```
 
-### For Contributors:
-When submitting PRs, add your changes to `docs/releases/UNRELEASED.md` in the appropriate category:
+**New to Jujutsu?** See our [complete workflow guide](docs/development/contributing-workflow.md) with step-by-step examples.
 
-```markdown
-## 🐛 Bug Fixes
-- Fix your bug description here
+## 📋 Development Standards
 
-## ✨ New Features  
-- Add your feature description here
+### Code Quality Requirements
+- **Tests required**: Every feature needs comprehensive tests
+- **Code coverage**: Maintain our 92%+ coverage standard
+- **Type safety**: Strict TypeScript, no `any` types
+- **Documentation**: Update relevant docs with your changes
+
+### Pre-commit Checklist
+```bash
+bun run check        # Format and lint code
+bun test            # Run all tests  
+bun run type-check  # TypeScript validation
+bun run security-check  # Scan for API keys
 ```
 
-This helps maintainers track changes and create comprehensive release notes.
+## 🔐 Security First
 
-## Completed
+**CRITICAL**: Read [Security Guidelines](docs/SECURITY-API-KEYS.md) before contributing.
 
-- [x] Integration tests (using Bun's test runner).
-- [x] Reading and writing FTL files with full FTL syntax support.
-- [x] Primary configuration (mainLang).
-- [x] Basic mock translation service.
+- Never commit real API keys
+- Use placeholders in examples: `sk-XXXXXXXXXXXXXXXX`
+- Run `bun run security-check` before every commit
+- Set up the pre-commit hook: `cp scripts/pre-commit-hook.sh .git/hooks/pre-commit`
 
-## Tasks & Roadmap
+## 🎯 What to Contribute
 
-### Translation Service Integration
+### High-Impact Areas
+- **New translation formats**: YAML, gettext (.po), XLIFF
+- **Translation providers**: Anthropic Claude, Google Gemini, Azure
+- **Framework integrations**: Better React/Vue/Angular support
+- **Performance optimizations**: Faster parsing, smarter caching
+- **Developer experience**: VS Code extension, better error messages
 
-- [ ] **Translation Service Implementation**
+### Good First Issues
+- Documentation improvements and examples
+- Error message enhancements
+- Test coverage for edge cases
+- Bug fixes (check [issues](https://github.com/erik-balfe/translator-sync/issues))
 
-  - [ ] Create a new class (e.g. `LLMTranslationService`) implementing the `TranslationService` interface.
-  - [ ] Add configuration for API keys, models, and options.
-  - [ ] Implement support for requests to popular LLM providers.
+## 📚 Project Documentation
 
-    - Create a reference list of LLM models from various providers.
+Before contributing, familiarize yourself with our architecture and guidelines:
 
-      - Include details such as:
-        - **Model Name**
-        - **Max Context Size**
-        - **Pricing** (with input, output, and cache hit prices)
-      - For example:
-        ```js
-        const llmModels = [
-          {
-            modelName: "OpenAI GPT-3.5",
-            maxContextSize: 4096,
-            pricing: {
-              inputPrice: "$0.002 per token",
-              outputPrice: "$0.003 per token",
-              cacheHitPrice: "$0.001 per token",
-            },
-          },
-          {
-            modelName: "OpenAI GPT-4",
-            maxContextSize: 8192,
-            pricing: {
-              inputPrice: "$0.03 per token",
-              outputPrice: "$0.04 per token",
-              cacheHitPrice: "$0.02 per token",
-            },
-          },
-          {
-            modelName: "Other Provider Model",
-            maxContextSize: 2048,
-            pricing: {
-              inputPrice: "$0.001 per token",
-              outputPrice: "$0.0015 per token",
-              cacheHitPrice: "$0.0005 per token",
-            },
-          },
-        ];
-        ```
+### Core Documentation
+- **[System Architecture](docs/architecture/system-design.md)** - High-level project structure
+- **[Data Flow](docs/architecture/data-flow.md)** - How translation data moves through the system
+- **[Development Setup](docs/development/)** - Local development environment
 
-  - [ ] Track usage information from each API request (usage stats, cost, token count) and print it to the console.
-  - [ ] Build fine-grained prompts that include:
-    - The keys to translate.
-    - Additional context (other available translation files, project-specific details).
-    - An ordered format to ensure no keys are missing, extra, or shuffled.
-  - [ ] Ensure the prompt handles edge cases:
-    - When the provided text exceeds a model's max context size, batch or segment requests appropriately.
-    - Handle scenarios where the model returns partial results, extra keys, or incorrect order.
-  - [ ] Define robust fallback and error handling:
-    - Validate API responses.
-    - Prompt the user with clear error messages if key mismatches occur.
-    - Retry or split the request if the context size is exceeded.
+### Technical Guides  
+- **[Jujutsu Workflow](docs/development/jujutsu-workflow.md)** - Complete version control guide
+- **[Testing Strategy](docs/development/)** - How we test and what coverage we expect
+- **[Release Process](docs/RELEASE-AUTOMATION.md)** - How releases are created and published
 
-### File Format Support
+### API & Configuration
+- **[CLI Interface](docs/api/)** - Command-line usage and options
+- **[Configuration](docs/api/)** - Config files and environment variables  
+- **[Translation Services](docs/api/)** - LLM provider integration
 
-- [ ] Add support for JSON translation files.
-  - Option to auto-detect file type.
-  - Use similar key-sync logic as for FTL.
-  - Ensure compatibility with existing i18n setups.
+### Quality Assurance
+- **[Code Quality Review](docs/CODE-QUALITY-REVIEW.md)** - Standards and best practices
+- **[Translation Quality](docs/TRANSLATION-QUALITY-REPORT.md)** - How we measure translation quality
 
-### Configuration Enhancements
+## 🏗️ Architecture Overview
 
-- [ ] Expand configuration options:
-  - [ ] Option to translate only missing keys vs. all keys.
-  - [ ] Define logging levels (minimal, verbose, debug).
-  - [ ] Set custom file patterns or directories.
-  - [ ] Select between different translation services via config (e.g. "mock", "openai", "openrouter").
+TranslatorSync follows a modular architecture:
 
-### CLI & Packaging Enhancements
+```
+src/
+├── cli/              # Command-line interface
+├── services/         # Translation providers and core logic
+├── utils/            # File parsing, format detection, utilities
+└── config/           # Configuration management
 
-- [ ] Add advanced CLI flags:
-  - [ ] `--dry-run`: simulate changes without writing files.
-  - [ ] `--verbose`: enable detailed logging.
-  - [ ] `--config <path>`: specify custom configuration paths.
-- [ ] Enable single-command execution (e.g. via `npx translator-sync`).
-- [ ] Compile the project into a standalone binary using Bun’s build features.
+docs/
+├── architecture/     # System design and decisions
+├── development/      # Developer guides and workflows  
+├── api/             # Usage documentation
+└── releases/        # Release notes and changelog
+```
 
-### Pipelines & Deployment
+**Key Principles:**
+- **Interface-driven design**: All services implement clear interfaces
+- **Single responsibility**: Each module has one clear purpose
+- **Dependency injection**: Services are testable and swappable
+- **Error handling**: Graceful degradation with helpful messages
 
-- [ ] Setup GitHub Actions for:
-  - [ ] Build validation.
-  - [ ] Running tests.
-  - [ ] Deployment/publishing pipelines.
-- [ ] Automate versioning and releases.
-- [ ] Publish the package to npm and consider registry features on platforms like jsdelivr.
+## 🔄 Contribution Workflow
 
-### Additional User-Focused Enhancements
+### 1. Planning Phase
+- Check [existing issues](https://github.com/erik-balfe/translator-sync/issues) and [discussions](https://github.com/erik-balfe/translator-sync/discussions)
+- For large features, create a discussion to gather feedback
+- Review relevant documentation to understand the system
 
-- [ ] Ensure full FTL compliance:
-  - [ ] Test with FTL features such as variables and placeholders.
-  - [ ] Validate prompt translations with context-sensitive variables.
-- [ ] Provide clear usage outputs for each translation run:
-  - [ ] Print usage metrics from LLM providers (tokens, estimated costs).
-- [ ] Maintain a detailed error log for troubleshooting translation failures.
+### 2. Development Phase  
+- Create focused changes using Jujutsu changelists
+- Follow our [development standards](docs/development/)
+- Write tests alongside your code (TDD encouraged)
+- Update documentation as you go
 
-## Advanced LLM Translation Service Development Guide
+### 3. Review Phase
+- Ensure all checks pass (`bun run check && bun test`)
+- Create detailed PR description with examples
+- Link to relevant issues or discussions
+- Be responsive to feedback and iterate quickly
 
-For implementing a real translation service using LLMs:
+### 4. Merge & Follow-up
+- Celebrate your contribution! 🎉
+- Consider updating related documentation
+- Monitor for any issues in the next release
 
-1. **Research and Model Selection:**
-   - Compile a list of popular LLM models with their max context sizes and pricing.
-   - Decide on default models for production (e.g. OpenAI GPT-3.5 or GPT-4).
-2. **Service Integration:**
-   - Build the API client with proper request batching if total text tokens exceed the chosen model’s max context size.
-   - Design prompts that include additional context from other language files to improve translation accuracy.
-   - Ensure the response parser checks that all required keys are present and in the proper order.
-3. **Error Handling & Usage Stats:**
-   - Log token usage and cost details from API responses.
-   - Implement retries and graceful error messages if the LLM returns partial or invalid responses.
-4. **Testing:**
-   - Update integration tests to simulate realistic scenarios, including oversized translation requests.
-   - Validate output consistency with preset expected outputs.
-5. **Documentation:**
-   - Document configuration options, prompt format, and known limitations.
-   - Provide examples on how to switch between different translation providers using config.
+## 🤝 Community Guidelines
 
-Keep this document updated as new features are added.
+### Communication
+- **Be respectful and inclusive** - We welcome contributors from all backgrounds
+- **Ask questions early** - Use discussions for design questions
+- **Share context** - Help reviewers understand your changes
+- **Be patient** - We aim to review PRs within 48 hours
+
+### Code Reviews
+- **Focus on code quality** - Suggest improvements, not just problems
+- **Be specific** - Point to exact lines and suggest alternatives
+- **Acknowledge good work** - Celebrate clever solutions and clean code
+- **Learn together** - Code review is a learning opportunity for everyone
+
+## 🆘 Getting Help
+
+### Development Questions
+- **Architecture/Design**: Use [GitHub Discussions](https://github.com/erik-balfe/translator-sync/discussions)
+- **Bug Reports**: Create [GitHub Issues](https://github.com/erik-balfe/translator-sync/issues) with detailed reproduction steps
+- **Jujutsu Help**: See our [workflow guide](docs/development/jujutsu-workflow.md) or [official docs](https://github.com/martinvonz/jj)
+
+### Quick References
+- **Commands**: `bun run` for all scripts, `jj help` for version control
+- **Testing**: `bun test tests/unit/` for fast iteration
+- **Debugging**: Set `LOG_LEVEL=debug` for verbose output
+
+## 🎯 Recognition
+
+We value every contribution! Contributors get:
+- Recognition in release notes
+- Listing in project contributors
+- Maintainer status for sustained contributions
+- Our eternal gratitude for making i18n better! 🙏
+
+---
+
+## 📞 Need Support?
+
+- 💬 **Questions**: [GitHub Discussions](https://github.com/erik-balfe/translator-sync/discussions)
+- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/erik-balfe/translator-sync/issues)  
+- 📖 **Documentation**: Browse the [docs/](docs/) folder
+- 🔗 **Community**: Join our growing community of i18n automation enthusiasts
+
+**Ready to contribute?** Start with `jj new master -m "your awesome feature"` and let's build something amazing together! 🚀

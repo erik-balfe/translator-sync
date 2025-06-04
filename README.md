@@ -248,7 +248,8 @@ TranslatorSync uses a `.translator-sync.json` file:
 {
   "version": "1.0",
   "provider": "openai",
-  "model": "gpt-4.1-nano",
+  "model": "gpt-4.1-nano", 
+  "baseUrl": "https://api.openai.com/v1",
   "primaryLanguage": "en",
   "directories": ["./locales", "./public/locales"],
   "options": {
@@ -265,47 +266,73 @@ TranslatorSync uses a `.translator-sync.json` file:
 # Required
 TRANSLATOR_API_KEY=your-api-key-here
 
-# Optional overrides
-TRANSLATOR_SERVICE=openai        # Override provider
-TRANSLATOR_MODEL=gpt-4.1-nano   # Override model
-LOG_LEVEL=info                   # debug, info, warn, error
-NODE_ENV=production              # Environment
+# Provider configuration
+TRANSLATOR_SERVICE=openai              # Provider type
+TRANSLATOR_MODEL=gpt-4.1-nano         # Model name
+TRANSLATOR_BASE_URL=https://api.openai.com/v1  # API endpoint
+
+# Optional
+LOG_LEVEL=info                         # debug, info, warn, error
+NODE_ENV=production                    # Environment
 ```
+
+**Enterprise Note**: Set `TRANSLATOR_BASE_URL` to your internal LLM API endpoint for complete data control.
 
 ## 🤖 AI Providers & Models
 
-### Recommended Models (2025)
+TranslatorSync works with any OpenAI-compatible API, including self-hosted models for enterprise security requirements.
 
-| Provider     | Model            | Quality    | Speed | Cost/1000 UI | Best For            |
-| ------------ | ---------------- | ---------- | ----- | ------------- | ------------------- |
-| **OpenAI**   | **gpt-4.1-nano** | ⭐⭐⭐⭐⭐ | 3.0s  | **$0.031**    | **Production** ✅   |
-| **OpenAI**   | **gpt-4.1-mini** | ⭐⭐⭐⭐⭐ | **2.3s** | $0.076    | **Speed Critical** ⚡ |
-| **DeepSeek** | **deepseek-v3**  | ⭐⭐⭐⭐⭐ | 15.2s | $0.056        | **Budget/Batch** 💰 |
+### Supported Providers
 
-_Default: **gpt-4.1-nano** - Best value for professional translations. Identical quality to more expensive models._
+| Provider | Models | Security | Setup |
+|----------|--------|----------|-------|
+| **OpenAI** | gpt-4.1-nano, gpt-4.1-mini | Cloud service | API key required |
+| **DeepSeek** | deepseek-v3 | Cloud service | API key required |
+| **Self-hosted** | Any OpenAI-compatible | Full control | Custom base URL |
+| **Enterprise LLM** | Anthropic, Google, Azure | Private infrastructure | OpenAI-compatible wrapper |
 
-**Tested 2025-06-02**: All models produce identical translation quality for UI elements. Choice depends on speed/cost requirements.
+### Enterprise & Self-Hosted Support
 
-For development/testing, see our [pricing guide](docs/reference/llm-pricing.md) for additional options.
+For companies with security requirements or existing LLM infrastructure:
+
+```bash
+# Use your own hosted LLM API
+export TRANSLATOR_API_KEY=your-internal-key
+export TRANSLATOR_SERVICE=openai  # Uses OpenAI-compatible format
+export TRANSLATOR_BASE_URL=https://your-internal-llm.company.com/v1
+export TRANSLATOR_MODEL=your-model-name
+```
+
+**Benefits:**
+- No external API dependencies 
+- Complete data control and privacy
+- Use existing enterprise LLM infrastructure
+- Same functionality as cloud providers
 
 ### Provider Setup
 
-**OpenAI:**
+**Cloud Providers:**
 
 ```bash
-# Get API key from: https://platform.openai.com/api-keys
+# OpenAI
 export TRANSLATOR_API_KEY=sk-...
 export TRANSLATOR_SERVICE=openai
 export TRANSLATOR_MODEL=gpt-4.1-nano
-```
 
-**DeepSeek:**
-
-```bash
-# Get API key from: https://platform.deepseek.com/api-keys
+# DeepSeek  
 export TRANSLATOR_API_KEY=sk-...
 export TRANSLATOR_SERVICE=deepseek
 export TRANSLATOR_MODEL=deepseek-v3
+```
+
+**Self-hosted/Enterprise:**
+
+```bash
+# Your internal LLM infrastructure
+export TRANSLATOR_API_KEY=your-api-key
+export TRANSLATOR_SERVICE=openai
+export TRANSLATOR_BASE_URL=https://llm.yourcompany.com/v1
+export TRANSLATOR_MODEL=your-model-name
 ```
 
 ## 🎯 Variable Support
@@ -531,27 +558,25 @@ translator-sync --use-memory
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md).
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for complete documentation.
 
-**Note**: This repository uses `master` as the default branch (not `main`).
+**Note**: This repository uses Jujutsu (jj) and `master` as the default branch.
 
-### Quick Contribution
+### Quick Start
 
 ```bash
-# Fork and clone
-git clone https://github.com/your-username/translator-sync.git
+# Fork and clone your fork
+jj git clone https://github.com/your-username/translator-sync.git
 
-# Create feature branch from master
-git checkout -b feature/amazing-feature master
+# Create new changelist from master
+jj new master -m "feat: add amazing feature"
 
 # Make changes and test
 bun test
 
-# Commit with conventional commits
-git commit -m "feat: add amazing feature"
-
-# Push and create PR
-git push origin feature/amazing-feature
+# Create bookmark and push for PR
+jj bookmark create feat-amazing -r @
+jj git push --bookmark feat-amazing --allow-new
 ```
 
 ## 🚀 Roadmap

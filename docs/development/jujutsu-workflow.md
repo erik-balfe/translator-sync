@@ -85,11 +85,11 @@ jj rebase -d master
 # Squash multiple changes into one (if needed)
 jj squash --from @- --into @
 
-# Create a branch (bookmark) for GitHub
-jj branch create feat-yaml-support
+# Create a bookmark for GitHub (specify current change with -r @)
+jj bookmark create feat-yaml-support -r @
 
-# Push to GitHub
-jj git push --branch feat-yaml-support
+# Push to GitHub (use --allow-new for new bookmarks)
+jj git push --bookmark feat-yaml-support --allow-new
 ```
 
 ### 7. After PR is Merged
@@ -98,8 +98,8 @@ jj git push --branch feat-yaml-support
 # Fetch the merged changes
 jj git fetch
 
-# Clean up your local branch
-jj branch delete feat-yaml-support
+# Jujutsu automatically stops tracking merged bookmarks
+# No manual cleanup needed!
 
 # Start new work from updated master
 jj new master -m "next feature"
@@ -121,19 +121,11 @@ jj new master -m "fix: handle empty translation files"
 # View parallel changes
 jj log --revisions 'master..'
 
-# Push different features to different branches
-jj branch create feat-json5 -r <change-id-1>
-jj branch create fix-empty-files -r <change-id-2>
-```
-
-### Splitting a Large Change
-
-```bash
-# If you've made too many changes in one changelist
-jj split
-
-# This opens an interactive editor to select which changes
-# go into the first commit and which stay for the second
+# Push different features to different bookmarks
+jj bookmark create feat-json5 -r <change-id-1>
+jj bookmark create fix-empty-files -r <change-id-2>
+jj git push --bookmark feat-json5 --allow-new
+jj git push --bookmark fix-empty-files --allow-new
 ```
 
 ### Combining Changes
@@ -165,7 +157,7 @@ jj describe -m "update code"
 ### 2. Keep Changes Focused
 
 - One feature/fix per change
-- Use `jj split` if change gets too large
+- Create separate changes for different features
 - Logical grouping makes review easier
 
 ### 3. Regular Rebasing
@@ -178,17 +170,17 @@ jj rebase -d master
 # This prevents conflicts from accumulating
 ```
 
-### 4. Branch Naming Convention
+### 4. Bookmark Naming Convention
 
 ```bash
 # Features
-jj branch create feat-<description>
+jj bookmark create feat-<description> -r @
 
 # Fixes
-jj branch create fix-<description>
+jj bookmark create fix-<description> -r @
 
 # Chores
-jj branch create chore-<description>
+jj bookmark create chore-<description> -r @
 ```
 
 ## 🚫 Common Pitfalls
@@ -205,14 +197,14 @@ jj new master -m "description"
 # Make changes in new changelist
 ```
 
-### 2. Don't Forget to Push Branches
+### 2. Don't Forget to Push Bookmarks
 
 ```bash
-# After creating branch, push it
-jj branch create my-feature
-jj git push --branch my-feature
+# After creating bookmark, push it
+jj bookmark create my-feature -r @
+jj git push --bookmark my-feature --allow-new
 
-# Without --branch, jj won't know what to push
+# Without --bookmark, jj won't know what to push
 ```
 
 ### 3. Don't Panic About "Conflicts"
@@ -250,8 +242,8 @@ jj new -m "test: add cache tests"
 jj squash --from @- --into @-- # Combine test with feature
 
 # 7. Push for review
-jj branch create feat-caching
-jj git push --branch feat-caching
+jj bookmark create feat-caching -r @
+jj git push --bookmark feat-caching --allow-new
 
 # 8. Create PR on GitHub
 # Go to https://github.com/erik-balfe/translator-sync/pulls
@@ -274,12 +266,12 @@ jj new master -m "new work"
 # Jujutsu automatically resolves when you save
 ```
 
-### "Cannot push without branch"
+### "Cannot push without bookmark"
 
 ```bash
-# Create a branch first
-jj branch create my-feature
-jj git push --branch my-feature
+# Create a bookmark first
+jj bookmark create my-feature -r @
+jj git push --bookmark my-feature --allow-new
 ```
 
 ### Undoing Mistakes
