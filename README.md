@@ -1,8 +1,8 @@
 # TranslatorSync
 
-**Premium AI-powered i18n translation file synchronization**. Automatically keep all your translation files in sync with intelligent context awareness and lightning-fast performance.
+**The only i18n automation tool with intelligent context awareness and enterprise self-hosted LLM support**. Unlike simple ChatGPT wrappers, TranslatorSync understands your project and preserves your existing translations.
 
-🎯 **9.3/10 quality** • ⚡ **1000x faster than manual** • 💰 **50,000x cheaper than services**
+🎯 **9.3/10 quality** • ⚡ **1000x faster than manual** • 💰 **50,000x cheaper than services** • 🏢 **Enterprise-ready**
 
 [![npm version](https://badge.fury.io/js/translator-sync.svg)](https://www.npmjs.com/package/translator-sync)
 [![Test Coverage](https://img.shields.io/badge/coverage-92.14%25-brightgreen.svg)](https://github.com/erik-balfe/translator-sync/actions)
@@ -29,7 +29,7 @@
 
 ### 🛠️ **Premium Developer Experience**
 - 🌐 **Universal Format Support** - JSON (React/Vue/Angular) and Fluent (.ftl)
-- 🤖 **Multiple AI Providers** - OpenAI GPT-4.1-nano (best value), DeepSeek V3, Groq
+- 🤖 **Any OpenAI-Compatible API** - Cloud providers (OpenAI, DeepSeek) or self-hosted for complete data control
 - 🔄 **Smart Sync Strategy** - Only missing keys, preserves existing translations
 - 🎯 **Perfect Variable Handling** - `{{variables}}`, `{variables}`, `%{variables}`, etc.
 - 📁 **Any Project Structure** - Flat files, nested directories, custom patterns
@@ -43,6 +43,39 @@
 - **Consistent terminology** - Maintains style across all languages
 - **Smart length preservation** - UI elements stay within space constraints
 - **Cultural appropriateness** - Native-feeling translations, not literal conversions
+
+## 🏆 Why Choose TranslatorSync?
+
+### Quick Comparison with Alternatives
+
+| Feature | TranslatorSync | i18n-ally | Transmart | Others |
+|---------|---------------|-----------|-----------|---------|
+| **Auto-translate missing keys only** | ✅ | ❌ Manual | ⚠️ Overwrites | ❌ |
+| **Preserves existing translations** | ✅ Always | ✅ | ❌ Dangerous | Varies |
+| **AI with context awareness** | ✅ Full context | ❌ | ❌ | ❌ |
+| **Understands your project** | ✅ Reads docs | ❌ | ❌ | ❌ |
+| **Self-hosted LLM support** | ✅ **Exclusive** | ❌ | ❌ | ❌ |
+| **Multiple AI providers** | ✅ 3+ | ❌ | ❌ OpenAI only | Limited |
+| **Production quality** | ✅ 92% coverage | - | - | - |
+
+### Unique Advantages
+
+**🏢 Enterprise-Ready with Self-Hosted LLMs**
+- Only tool supporting private LLM infrastructure
+- Complete data control - no external APIs required
+- Works with any OpenAI-compatible endpoint
+
+**🧠 Intelligent Translation (Not Just ChatGPT Wrapper)**
+- Analyzes your README and package.json
+- Uses existing translations for consistency
+- Adapts to your project type automatically
+
+**✅ Respects Your Work**
+- Never overwrites existing translations
+- Only translates what's missing
+- Preserves your formatting and structure
+
+[See detailed competitive analysis →](docs/COMPETITIVE-ANALYSIS.md)
 
 ## 🚀 Quick Start
 

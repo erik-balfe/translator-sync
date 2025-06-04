@@ -103,6 +103,7 @@ Before contributing, familiarize yourself with our architecture and guidelines:
 ### Quality Assurance
 - **[Code Quality Review](docs/CODE-QUALITY-REVIEW.md)** - Standards and best practices
 - **[Translation Quality](docs/TRANSLATION-QUALITY-REPORT.md)** - How we measure translation quality
+- **[Competitive Analysis](docs/COMPETITIVE-ANALYSIS.md)** - How we compare to alternatives
 
 ## 🏗️ Architecture Overview
 
