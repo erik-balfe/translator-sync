@@ -159,8 +159,17 @@ jobs:
           else
             # Use unreleased notes or generate basic notes
             if [ -f "docs/releases/UNRELEASED.md" ]; then
-              NOTES=$(tail -n +3 "docs/releases/UNRELEASED.md")
-              echo "Using UNRELEASED.md for release notes"
+              # Check if UNRELEASED.md has actual content or just template
+              if grep -q "CRITICAL.*After completing ANY change" "docs/releases/UNRELEASED.md" && ! grep -A 100 "## 🎯 Highlights" "docs/releases/UNRELEASED.md" | grep -q "^- [^[:space:]]"; then
+                echo "⚠️ WARNING: UNRELEASED.md appears to contain only template content"
+                echo "This suggests no changes were tracked for this release"
+                echo "Consider adding actual changes or creating manual release notes"
+                NOTES="## Release v$VERSION\n\n⚠️ **Warning**: This release was created without tracked changes.\n\nThis release includes various improvements and bug fixes.\n\nPlease see the commit history for details.\n\n**Note for developers**: Remember to update docs/releases/UNRELEASED.md after each change!"
+                echo "Using template warning notes due to empty UNRELEASED.md"
+              else
+                NOTES=$(tail -n +3 "docs/releases/UNRELEASED.md")
+                echo "Using UNRELEASED.md for release notes"
+              fi
             else
               NOTES="## Release v$VERSION\n\nThis release includes various improvements and bug fixes.\n\nPlease see the commit history for details."
               echo "Using generic release notes"
@@ -305,6 +314,28 @@ jobs:
           echo "✅ Successfully published to NPM!"
           echo "🔗 Package available at: https://www.npmjs.com/package/translator-sync/v/$VERSION"
 
+      - name: Update deno.json version
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          echo "📦 Updating deno.json version to $VERSION..."
+          
+          # Update deno.json version to match package.json
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" deno.json
+          echo "✅ Updated deno.json to version $VERSION"
+
+      - name: Publish to JSR
+        if: success()
+        shell: bash
+        run: |
+          echo "📦 Publishing @tyr/translator-sync to JSR..."
+          
+          # JSR uses OIDC authentication - no token needed
+          npx jsr publish
+          
+          echo "✅ Successfully published to JSR!"
+          echo "🔗 Package available at: https://jsr.io/@tyr/translator-sync"
+
       - name: Create summary
         shell: bash
         run: |
@@ -325,10 +356,12 @@ jobs:
           else
             echo "- NPM package published" >> $GITHUB_STEP_SUMMARY
           fi
+          echo "- JSR package published" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🔗 Links:" >> $GITHUB_STEP_SUMMARY
           echo "- [GitHub Release](https://github.com/erik-balfe/translator-sync/releases/tag/v$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "- [NPM Package](https://www.npmjs.com/package/translator-sync/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
+          echo "- [JSR Package](https://jsr.io/@tyr/translator-sync)" >> $GITHUB_STEP_SUMMARY
           
           if [ "${{ steps.check_notes.outputs.notes_exist }}" = "true" ]; then
             echo "- Release notes: docs/releases/v$VERSION.md" >> $GITHUB_STEP_SUMMARY
