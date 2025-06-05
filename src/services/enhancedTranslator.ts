@@ -82,7 +82,7 @@ The translations should feel natural and appropriate for this specific project t
   /**
    * Refine a raw project description for translation context.
    */
-  async refineDescription(rawDescription: string) {
+  async refineDescription(rawDescription: string): Promise<string> {
     return await this.contextExtractor.refineProjectDescription(rawDescription);
   }
 
