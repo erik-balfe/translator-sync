@@ -100,6 +100,13 @@ jobs:
           bun run lint
           echo "✅ Linter passed"
 
+      - name: Validate JSR compatibility
+        shell: bash
+        run: |
+          echo "🔍 Validating JSR TypeScript compatibility..."
+          bun run jsr-check
+          echo "✅ JSR validation passed"
+
   release:
     needs: pre-release-checks
     runs-on: ubuntu-latest
