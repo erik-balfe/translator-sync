@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { logger } from "../utils/logger.ts";
-import { ContextExtractor } from "./contextExtractor.ts";
+import { ContextExtractor, type RefinedContext } from "./contextExtractor.ts";
 import type { TranslationContext, TranslationService } from "./translator.ts";
 
 /**
@@ -82,7 +82,7 @@ The translations should feel natural and appropriate for this specific project t
   /**
    * Refine a raw project description for translation context.
    */
-  async refineDescription(rawDescription: string): Promise<string> {
+  async refineDescription(rawDescription: string): Promise<RefinedContext> {
     return await this.contextExtractor.refineProjectDescription(rawDescription);
   }
 

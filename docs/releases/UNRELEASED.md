@@ -32,6 +32,7 @@
 - Add JSR TypeScript validation to CI pipeline to catch publishing issues early
 - Add JSR compatibility check to manual release workflow pre-checks
 - Add local JSR validation script: `bun run jsr-check`
+- Fix missing JSR validation in CI and manual release workflows
 
 ## 📚 Documentation
 
