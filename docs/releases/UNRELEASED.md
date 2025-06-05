@@ -17,16 +17,21 @@
 - Fix release workflow using template UNRELEASED.md instead of actual changes
 - Create proper release notes for v0.2.7 retroactively
 - Fix manual release workflow missing JSR publishing step
+- Fix missing jsr-check script in package.json causing CI failure
 
 ## 🔧 Improvements
 
 - Improve release workflow to detect and warn when UNRELEASED.md contains only template content
 - Add JSR publishing to manual release workflow with OIDC authentication
 - Update deno.json version to match current package.json version (0.2.7)
+- Add explicit return type to enhancedTranslator.refineDescription for JSR compatibility
 
 ## 🏗️ Development
 
 - Improve UNRELEASED.md template with clearer instructions and examples
+- Add JSR TypeScript validation to CI pipeline to catch publishing issues early
+- Add JSR compatibility check to manual release workflow pre-checks
+- Add local JSR validation script: `bun run jsr-check`
 
 ## 📚 Documentation
 
