@@ -70,6 +70,13 @@ jobs:
           echo "🧹 Running linter..."
           bun run lint
 
+      - name: Validate JSR compatibility
+        shell: bash
+        run: |
+          echo "🔍 Validating JSR TypeScript compatibility..."
+          bun run jsr-check
+          echo "✅ JSR validation passed"
+
       - name: Build project
         run: |
           echo "🏗️ Building project..."
@@ -86,6 +93,11 @@ jobs:
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Version: $VERSION"
+          
+          # Update package.json and deno.json versions
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" package.json
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" deno.json
+          echo "✅ Updated package versions to $VERSION"
 
       - name: Check if release notes exist
         id: check_notes
@@ -150,7 +162,7 @@ jobs:
           echo "📝 Release notes prepared"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.version.outputs.version }}
           name: v${{ steps.version.outputs.version }}
@@ -159,7 +171,8 @@ jobs:
           prerelease: false
           generate_release_notes: false
           files: |
-            dist/*
+            dist/index.js
+            dist/cli/translator-sync.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -168,11 +181,49 @@ jobs:
         shell: bash
         run: |
           echo "📦 Publishing to NPM..."
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-          bun run build
-          npm publish --access public
+          
+          # Check if NPM_TOKEN is available
+          if [ -z "${{ secrets.NPM_TOKEN }}" ]; then
+            echo "❌ ERROR: NPM_TOKEN not found in secrets"
+            echo "Please configure NPM_TOKEN in repository secrets"
+            exit 1
+          fi
+          
+          # Check if version already exists on NPM
+          VERSION="${{ steps.version.outputs.version }}"
+          if npm view translator-sync@$VERSION version 2>/dev/null; then
+            echo "⚠️ WARNING: Version $VERSION already exists on NPM"
+            echo "Skipping NPM publish to avoid duplicate version error"
+          else
+            echo "🔐 Configuring NPM authentication..."
+            echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+            
+            echo "📦 Publishing translator-sync@$VERSION to NPM..."
+            npm publish --access public
+            
+            echo "✅ Successfully published to NPM!"
+            echo "🔗 Package available at: https://www.npmjs.com/package/translator-sync/v/$VERSION"
+          fi
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish to JSR
+        if: success()
+        shell: bash
+        run: |
+          echo "📦 Publishing @tyr/translator-sync to JSR..."
+          
+          # Check if version already exists on JSR
+          VERSION="${{ steps.version.outputs.version }}"
+          if npx jsr show @tyr/translator-sync@$VERSION 2>/dev/null | grep -q "$VERSION"; then
+            echo "⚠️ WARNING: Version $VERSION already exists on JSR"
+            echo "Skipping JSR publish to avoid duplicate version error"
+          else
+            # JSR uses OIDC authentication - no token needed
+            npx jsr publish
+            echo "✅ Successfully published to JSR!"
+            echo "🔗 Package available at: https://jsr.io/@tyr/translator-sync"
+          fi
 
       - name: Create summary
         shell: bash
@@ -188,10 +239,12 @@ jobs:
           echo "- Build successful" >> $GITHUB_STEP_SUMMARY
           echo "- GitHub release created" >> $GITHUB_STEP_SUMMARY
           echo "- NPM package published" >> $GITHUB_STEP_SUMMARY
+          echo "- JSR package published" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🔗 Links:" >> $GITHUB_STEP_SUMMARY
           echo "- [GitHub Release](https://github.com/erik-balfe/translator-sync/releases/tag/v$VERSION)" >> $GITHUB_STEP_SUMMARY
-          echo "- [NPM Package](https://www.npmjs.com/package/translator-sync)" >> $GITHUB_STEP_SUMMARY
+          echo "- [NPM Package](https://www.npmjs.com/package/translator-sync/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
+          echo "- [JSR Package](https://jsr.io/@tyr/translator-sync)" >> $GITHUB_STEP_SUMMARY
           
           if [ "${{ steps.check_notes.outputs.notes_exist }}" = "true" ]; then
             echo "- Release notes: docs/releases/v$VERSION.md" >> $GITHUB_STEP_SUMMARY
