@@ -133,6 +133,10 @@ jobs:
           # Update package.json version
           sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" package.json
           echo "📦 Updated package.json to version $VERSION"
+          
+          # Also update deno.json version to keep them in sync
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" deno.json
+          echo "📦 Updated deno.json to version $VERSION"
 
       - name: Build project
         run: |
@@ -198,7 +202,7 @@ jobs:
           echo "🏷️ Created and pushed tag v$VERSION"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ github.event.inputs.version }}
           name: v${{ github.event.inputs.version }}
@@ -207,7 +211,8 @@ jobs:
           prerelease: false
           generate_release_notes: false
           files: |
-            dist/*
+            dist/index.js
+            dist/cli/translator-sync.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -337,11 +342,18 @@ jobs:
         run: |
           echo "📦 Publishing @tyr/translator-sync to JSR..."
           
-          # JSR uses OIDC authentication - no token needed
-          npx jsr publish
-          
-          echo "✅ Successfully published to JSR!"
-          echo "🔗 Package available at: https://jsr.io/@tyr/translator-sync"
+          # Check if version already exists on JSR
+          VERSION="${{ github.event.inputs.version }}"
+          if npx jsr show @tyr/translator-sync@$VERSION 2>/dev/null | grep -q "$VERSION"; then
+            echo "⚠️ WARNING: Version $VERSION already exists on JSR"
+            echo "This usually means a previous release workflow succeeded"
+            echo "Skipping JSR publish to avoid duplicate version error"
+          else
+            # JSR uses OIDC authentication - no token needed
+            npx jsr publish
+            echo "✅ Successfully published to JSR!"
+            echo "🔗 Package available at: https://jsr.io/@tyr/translator-sync"
+          fi
 
       - name: Create summary
         shell: bash
