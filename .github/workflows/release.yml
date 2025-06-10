@@ -220,7 +220,7 @@ jobs:
             echo "Skipping JSR publish to avoid duplicate version error"
           else
             # JSR uses OIDC authentication - no token needed
-            npx jsr publish
+            npx jsr publish --allow-dirty
             echo "✅ Successfully published to JSR!"
             echo "🔗 Package available at: https://jsr.io/@tyr/translator-sync"
           fi
