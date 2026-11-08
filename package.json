@@ -1,8 +1,29 @@
 {
   "name": "translator-sync",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "description": "Automate React/Vue i18n translation workflow with AI. Sync translation files automatically, reduce costs 50,000x vs services. Works with react-i18next, vue-i18n, JSON, Fluent.",
-  "keywords": ["react-i18n", "vue-i18n", "i18next", "translation-automation", "localization-tool", "i18n-workflow", "translation-sync", "react-translation", "vue-translation", "i18n-cli", "translation-cli", "automated-translation", "i18n", "translation", "localization", "react", "vue", "nextjs", "ai", "openai"],
+  "keywords": [
+    "react-i18n",
+    "vue-i18n",
+    "i18next",
+    "translation-automation",
+    "localization-tool",
+    "i18n-workflow",
+    "translation-sync",
+    "react-translation",
+    "vue-translation",
+    "i18n-cli",
+    "translation-cli",
+    "automated-translation",
+    "i18n",
+    "translation",
+    "localization",
+    "react",
+    "vue",
+    "nextjs",
+    "ai",
+    "openai"
+  ],
   "homepage": "https://github.com/erik-balfe/translator-sync",
   "bugs": "https://github.com/erik-balfe/translator-sync/issues",
   "license": "MIT",
@@ -19,44 +40,26 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "bun build src/cli/translator-sync.ts --target=node --outdir=dist/cli --format=esm && bun build src/index.ts --target=node --outdir=dist --format=esm",
+    "build": "bun scripts/build.ts",
     "prepublishOnly": "bun run build",
-    "check": "biome check --write .",
-    "lint": "biome lint --write .",
-    "format": "biome format --write .",
-    "format:check": "biome format .",
-    "lint:check": "biome lint .",
-    "ci": "biome ci .",
+    "check": "bun run type-check && bun test",
     "test": "bun test",
-    "test:unit": "bun test tests/unit/",
-    "test:integration": "bun test tests/integration/",
+    "test:unit": "bun test tests/unit",
+    "test:integration": "bun test tests/integration",
     "test:coverage": "bun test --coverage",
     "type-check": "tsc --noEmit",
-    "security-check": "grep -r -E '(sk-[a-zA-Z0-9]{32,}|api[_-]?key[[:space:]]*[:=][[:space:]]*[a-zA-Z0-9_-]{20,}|npm_[a-zA-Z0-9]{36})' --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=.git --exclude='*.md' --exclude='.env*' --include='*.ts' --include='*.js' --include='*.json' . 2>/dev/null || echo '✅ No API keys detected in code files'",
-    "jsr-check": "npx jsr publish --dry-run --allow-dirty",
-    "release:prepare": "scripts/release-helper.sh prepare",
-    "release:finalize": "scripts/release-helper.sh finalize",
-    "release:add-change": "scripts/release-helper.sh add-change",
-    "release:preview": "scripts/release-helper.sh preview",
-    "release:github": "echo '🚀 To release via GitHub:\\n1. Go to: https://github.com/erik-balfe/translator-sync/actions/workflows/manual-release.yml\\n2. Click \"Run workflow\"\\n3. Enter version number\\n4. Click green \"Run workflow\" button'"
-  },
-  "dependencies": {
-    "@fluent/syntax": "^0.19.0",
-    "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/exporter-otlp-http": "^0.26.0",
-    "@opentelemetry/instrumentation-http": "^0.201.1",
-    "@opentelemetry/resources": "^2.0.1",
-    "@opentelemetry/sdk-node": "^0.201.1",
-    "@opentelemetry/semantic-conventions": "^1.34.0",
-    "openai": "^4.103.0"
+    "release:major": "bun scripts/release.ts major",
+    "release:minor": "bun scripts/release.ts minor",
+    "release:patch": "bun scripts/release.ts patch"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
+    "@fluent/syntax": "^0.19.0",
     "@types/bun": "latest",
-    "@types/node": "^20.0.0"
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.3"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.0.0"
   },
   "publishConfig": {
     "access": "public"

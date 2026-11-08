@@ -1,4 +1,3 @@
-#!/usr/bin/env bun
 import { telemetry } from "../utils/telemetry.ts";
 
 /**

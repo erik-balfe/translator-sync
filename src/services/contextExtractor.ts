@@ -1,4 +1,3 @@
-#!/usr/bin/env bun
 import {
   FALLBACK_QUALITY_SCORE,
   MIN_DESCRIPTION_LENGTH,

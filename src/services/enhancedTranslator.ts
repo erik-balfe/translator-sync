@@ -1,4 +1,3 @@
-#!/usr/bin/env bun
 import { logger } from "../utils/logger.ts";
 import { ContextExtractor, type RefinedContext } from "./contextExtractor.ts";
 import type { TranslationContext, TranslationService } from "./translator.ts";

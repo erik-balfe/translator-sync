@@ -1,4 +1,3 @@
-#!/usr/bin/env bun
 import { getEnvironmentConfig } from "../config/environment.ts";
 import { getProviderDefaults } from "../config/providers.ts";
 import { DeepSeekProvider } from "./deepseekProvider.ts";
@@ -10,7 +9,7 @@ import { MockTranslationService } from "./translator.ts";
 /**
  * Supported translation service providers.
  */
-export type ServiceProvider = "mock" | "openai" | "deepseek" | "groq" | "anthropic";
+export type ServiceProvider = "mock" | "openai" | "deepseek" | "groq";
 
 /**
  * Configuration for creating a translation service.
@@ -75,9 +74,6 @@ export function createTranslationService(config: ServiceConfig): TranslationServ
       });
     }
 
-    case "anthropic":
-      throw new Error("Anthropic provider not yet implemented");
-
     default:
       throw new Error(`Unknown provider: ${config.provider}`);
   }
@@ -133,7 +129,7 @@ export function createFromEnvironment(): TranslationService {
  * Gets available providers.
  */
 export function getAvailableProviders(): ServiceProvider[] {
-  return ["mock", "openai", "deepseek", "groq", "anthropic"];
+  return ["mock", "openai", "deepseek", "groq"];
 }
 
 /**

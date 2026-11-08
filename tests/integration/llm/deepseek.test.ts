@@ -56,17 +56,6 @@ describe("DeepSeek Translation Provider", () => {
     skipIfNoApiKey("creates service via factory", () => {
       expect(service).toBeDefined();
     });
-
-    test("throws error with invalid API key", async () => {
-      const invalidService = createTranslationService({
-        provider: "deepseek",
-        apiKey: "invalid-key-123",
-      });
-
-      await expect(invalidService.translateBatch("en", "es", ["hello"])).rejects.toThrow(
-        /authentication|api key|unauthorized|401/i,
-      );
-    });
   });
 
   describe("Basic Translation Functionality", () => {

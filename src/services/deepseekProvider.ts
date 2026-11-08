@@ -1,5 +1,4 @@
-#!/usr/bin/env bun
-import OpenAI from "openai";
+import { type ChatCompletionResponse, createChatClient } from "./chatClient.ts";
 import { getVariableInstructions } from "../utils/jsonParser.ts";
 import { logger } from "../utils/logger.ts";
 import { telemetry } from "../utils/telemetry.ts";
@@ -11,14 +10,14 @@ import type { ProviderConfig, TranslationContext, TranslationService } from "./t
 export interface DeepSeekConfig extends ProviderConfig {
   model?: string; // defaults to 'deepseek-chat'
   temperature?: number; // defaults to 0.1 for consistent translations
-  client?: OpenAI; // Optional client for testing
+  client?: ReturnType<typeof createChatClient>; // Optional client for testing
 }
 
 /**
  * DeepSeek V3 translation service using OpenAI-compatible API.
  */
 export class DeepSeekProvider implements TranslationService {
-  private client: OpenAI;
+  private client: ReturnType<typeof createChatClient>;
   private config: DeepSeekConfig;
   private totalInputTokens = 0;
   private totalOutputTokens = 0;
@@ -36,7 +35,7 @@ export class DeepSeekProvider implements TranslationService {
     // Use provided client for testing or create new one
     this.client =
       config.client ||
-      new OpenAI({
+      createChatClient({
         apiKey: this.config.apiKey,
         baseURL: this.config.baseURL,
         timeout: this.config.timeout,

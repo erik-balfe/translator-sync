@@ -1,24 +1,25 @@
-#!/usr/bin/env bun
 import fs from "node:fs";
-import { readdir } from "node:fs/promises";
+import { readdir, readFile as readFileNode, writeFile as writeFileNode } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
+import { dirname } from "node:path";
 
 /**
- * Reads a file as text using Bun's optimized file API.
+ * Reads a file as UTF-8 text.
  * @param filePath The path to the file.
  * @returns Promise resolving to the file's text content.
  */
 export async function readFile(filePath: string): Promise<string> {
-  // Bun.file returns a BunFile that implements Blob.
-  return await Bun.file(filePath).text();
+  return await readFileNode(filePath, "utf8");
 }
 
 /**
- * Writes data (a string) to a file using Bun.write.
+ * Writes a string to a file, creating parent directories when missing.
  * @param filePath The path to the file.
  * @param data The string content to write.
  */
 export async function writeFile(filePath: string, data: string): Promise<void> {
-  await Bun.write(filePath, data);
+  await mkdir(dirname(filePath), { recursive: true });
+  await writeFileNode(filePath, data, "utf8");
 }
 
 /**

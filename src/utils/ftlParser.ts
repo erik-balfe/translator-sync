@@ -1,4 +1,3 @@
-#!/usr/bin/env bun
 import { parse } from "@fluent/syntax";
 
 /**

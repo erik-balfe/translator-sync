@@ -1,23 +1,41 @@
-#!/usr/bin/env bun
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { interactiveSetup, loadConfig } from "../config/configLoader.ts";
 import { loadEnv } from "../utils/envLoader.ts";
 import { initializeFeedback, recordUsage } from "../utils/feedback.ts";
 import { logger } from "../utils/logger.ts";
-import {
-  configureOTelFromEnv,
-  initializeOpenTelemetry,
-  shutdownOpenTelemetry,
-} from "../utils/otel.ts";
 import { initializeTelemetry, telemetry } from "../utils/telemetry.ts";
 import { runSync } from "./sync.ts";
+
+/**
+ * Reads the version from package.json so `--version` can never drift from what
+ * was actually published.
+ */
+function getVersion(): string {
+  try {
+    const here = dirname(fileURLToPath(import.meta.url));
+    // dist/cli -> package root; src/cli -> package root
+    for (const up of ["../..", "../../.."]) {
+      const candidate = join(here, up, "package.json");
+      try {
+        const pkg = JSON.parse(readFileSync(candidate, "utf8")) as { version?: string };
+        if (pkg.version) return pkg.version;
+      } catch {
+        // try the next candidate
+      }
+    }
+  } catch {
+    // fall through to the unknown marker
+  }
+  return "unknown";
+}
 
 // Load environment variables
 loadEnv();
 
-// Initialize telemetry early (before any operations)
-const otelConfig = configureOTelFromEnv();
-const otelSdk = initializeOpenTelemetry(otelConfig);
+// Usage counters are local-only; there is no exporter to start or flush.
 
 // Parse command-line arguments
 const { values, positionals } = parseArgs({
@@ -37,7 +55,7 @@ async function main() {
   try {
     // Show version
     if (values.version) {
-      console.log("TranslatorSync v1.0.0");
+      console.log(`TranslatorSync v${getVersion()}`);
       process.exit(0);
     }
 
@@ -94,7 +112,7 @@ For more options, run: translator-sync sync --help
     }
 
     // Record command execution
-    const span = telemetry.recordCommand(command || "sync");
+    telemetry.recordCommand(command || "sync");
 
     // Handle commands
     switch (command) {
@@ -124,7 +142,6 @@ For more options, run: translator-sync sync --help
       await recordUsage();
     }
 
-    span?.end();
   } catch (error) {
     // Record error anonymously
     telemetry.recordError("cli_error", error instanceof Error ? error.message : String(error));
@@ -134,7 +151,6 @@ For more options, run: translator-sync sync --help
     // Graceful shutdown
     if (telemetryInitialized) {
       await telemetry.endSession();
-      await shutdownOpenTelemetry();
     }
   }
 }
@@ -169,13 +185,11 @@ async function handleFeedbackCommand(args: string[]) {
 // Graceful shutdown on signals
 process.on("SIGINT", async () => {
   await telemetry.endSession();
-  await shutdownOpenTelemetry();
   process.exit(0);
 });
 
 process.on("SIGTERM", async () => {
   await telemetry.endSession();
-  await shutdownOpenTelemetry();
   process.exit(0);
 });
 
@@ -183,6 +197,5 @@ main().catch(async (error) => {
   telemetry.recordError("main_error", error instanceof Error ? error.message : String(error));
   logger.error(`Fatal error: ${error instanceof Error ? error.message : error}`);
   await telemetry.endSession();
-  await shutdownOpenTelemetry();
   process.exit(1);
 });

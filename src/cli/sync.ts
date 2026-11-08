@@ -1,4 +1,3 @@
-#!/usr/bin/env bun
 import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
@@ -11,6 +10,7 @@ import { calculateCost } from "../utils/costCalculator.ts";
 import { isSupportedFile } from "../utils/fileFormatDetector.ts";
 import { isDirectory, listFiles, readFile, writeFile } from "../utils/fileManager.ts";
 import { logger } from "../utils/logger.ts";
+import { groupPluralKeys, missingCategories, pluralCategoriesFor } from "../utils/plural.ts";
 import { telemetry } from "../utils/telemetry.ts";
 import { parseTranslationFile, serializeTranslationFile } from "../utils/universalParser.ts";
 
@@ -100,6 +100,9 @@ If no directory is specified, searches for translations using config file settin
     provider: config.provider,
     apiKey: config.apiKey || process.env.TRANSLATOR_API_KEY,
     model: config.model,
+    baseURL: config.baseURL,
+    timeout: config.timeout,
+    maxRetries: config.maxRetries,
   });
 
   // Skip description logging in simplified flow
@@ -301,6 +304,27 @@ async function processTargetFile(
     .filter((text) => text !== "");
 
   const targetLang = extractLanguageFromPath(targetPath);
+
+  // Plural forms are the one place where a "missing key" is not just a translation:
+  // the target language may need categories the source never had (Russian few/many).
+  const sourcePluralGroups = groupPluralKeys([...primaryTranslations.keys()]);
+  if (sourcePluralGroups.size > 0) {
+    const sourceCategories = [...sourcePluralGroups.values()].flatMap((group) => [
+      ...group.keys(),
+    ]);
+    const needed = missingCategories(targetLang, sourceCategories);
+    if (needed.length > 0) {
+      logger.warn(
+        `${fileName}: ${targetLang} needs plural categories ${needed.join(", ")} that the source does not define.`,
+      );
+      logger.warn(
+        `Add ${needed.map((c) => `<key>_${c}`).join(", ")} to ${config.primaryLanguage} and re-run, or review the generated forms by hand.`,
+      );
+    }
+    logger.debug(
+      `${fileName}: ${sourcePluralGroups.size} plural group(s), target uses ${pluralCategoriesFor(targetLang).join("/")}`,
+    );
+  }
 
   try {
     const translationResults = await translator.translateWithContext(

@@ -1,7 +1,7 @@
-#!/usr/bin/env bun
-import OpenAI from "openai";
+import { type ChatCompletionResponse, createChatClient } from "./chatClient.ts";
 import { getVariableInstructions } from "../utils/jsonParser.ts";
 import { logger } from "../utils/logger.ts";
+import { buildPluralInstruction, hasIcuPlural } from "../utils/plural.ts";
 import { telemetry } from "../utils/telemetry.ts";
 import type { ProviderConfig, TranslationContext, TranslationService } from "./translator.ts";
 
@@ -17,7 +17,7 @@ export interface OpenAIConfig extends ProviderConfig {
  * OpenAI GPT-based translation service.
  */
 export class OpenAIProvider implements TranslationService {
-  private client: OpenAI;
+  private client: ReturnType<typeof createChatClient>;
   private config: OpenAIConfig;
   private totalInputTokens = 0;
   private totalOutputTokens = 0;
@@ -31,12 +31,12 @@ export class OpenAIProvider implements TranslationService {
       ...config,
     };
 
-    this.client = new OpenAI({
-      apiKey: this.config.apiKey,
-      baseURL: this.config.baseURL,
-      timeout: this.config.timeout,
-      maxRetries: this.config.maxRetries,
-    });
+    this.client = createChatClient({
+        apiKey: this.config.apiKey,
+        baseURL: this.config.baseURL,
+        timeout: this.config.timeout,
+        maxRetries: this.config.maxRetries,
+      });
   }
 
   async translateBatch(
@@ -138,9 +138,16 @@ export class OpenAIProvider implements TranslationService {
     const variableInstructions = texts.map((text) => getVariableInstructions(text)).filter(Boolean);
     const uniqueInstructions = [...new Set(variableInstructions)].join("\n");
 
+    const pluralInstruction = buildPluralInstruction(
+      languageNames.target,
+      texts.some((text) => hasIcuPlural(text)),
+    );
+
     return `You are a professional translator. Translate the following texts from ${languageNames.source} to ${languageNames.target}.
 
 ${contextInstructions}
+
+${pluralInstruction}
 
 CRITICAL REQUIREMENTS:
 - Preserve ALL variables and placeholders EXACTLY as they appear in the source

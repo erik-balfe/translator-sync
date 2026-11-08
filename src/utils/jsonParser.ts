@@ -1,4 +1,3 @@
-#!/usr/bin/env bun
 
 /**
  * JSON translation file parser and serializer.

@@ -1,4 +1,3 @@
-#!/usr/bin/env bun
 
 import { type FileFormat, detectFileFormat } from "./fileFormatDetector.ts";
 import { parseFTLContent, serializeFTLContent } from "./ftlParser.ts";
