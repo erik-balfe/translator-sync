@@ -3,78 +3,49 @@ name: Publish
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # OIDC: npm and JSR verify this workflow instead of a stored token
 
 jobs:
-  test-and-build:
+  publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.4.4
 
-      - name: Install dependencies
-        run: bun install
-
-      - name: Run tests
-        run: bun test
-
-      - name: Build
-        run: bun run build
-
-  publish-npm:
-    needs: test-and-build
-    runs-on: ubuntu-latest
-    environment: prod
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      # Trusted publishing needs Node >= 22.14.0 and npm >= 11.5.1.
+      - uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: "22.14.0"
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
 
-      - name: Install dependencies
-        run: bun install
+      - name: Upgrade npm for OIDC publishing
+        run: |
+          npm install --global npm@latest
+          npm --version
 
-      - name: Build
-        run: bun run build
+      - run: bun install --frozen-lockfile
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          registry-url: 'https://registry.npmjs.org'
-          
+      - name: Verify before publishing
+        run: |
+          bun run type-check
+          bun test
+          bun run build
+          node dist/cli/translator-sync.js --version
+
+      # No NODE_AUTH_TOKEN on purpose: npm exchanges the GitHub OIDC token for
+      # short-lived credentials and attaches a provenance statement. Requires a
+      # Trusted Publisher entry for this repo and this workflow file on npmjs.com.
       - name: Publish to npm
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-  publish-jsr:
-    needs: test-and-build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install
+        run: npm publish --provenance --access public
 
       - name: Publish to JSR
-        run: npx jsr publish
+        run: npx --yes jsr publish

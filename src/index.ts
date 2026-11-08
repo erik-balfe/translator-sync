@@ -1,4 +1,3 @@
-#!/usr/bin/env bun
 // Main library exports for programmatic usage
 
 export { TranslationServiceFactory } from "./services/serviceFactory.ts";

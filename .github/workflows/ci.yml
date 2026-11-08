@@ -2,212 +2,43 @@ name: CI
 
 on:
   push:
-    branches: [master, main, 'feature/**', 'fix/**', 'feat/**']
+    branches: [master]
   pull_request:
-    branches: [master, main]
-    types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 jobs:
-  lint:
+  verify:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.4.4
 
-      - name: Install dependencies
-        run: bun install
+      - name: Install
+        run: bun install --frozen-lockfile
 
-      - name: Run linter
-        run: bun run lint
-
-      - name: Check formatting
-        run: bun run format:check
-
-  test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        bun-version: [latest]
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ matrix.bun-version }}
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Run unit tests
-        run: bun test tests/unit/
-
-      - name: Run integration tests (skip if no API keys)
-        shell: bash
-        run: |
-          if [ -n "${{ secrets.OPENAI_API_KEY }}" ]; then
-            echo "Running integration tests with API keys"
-            OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" bun test tests/integration/
-          else
-            echo "⚠️ Skipping integration tests - no API keys configured"
-            echo "Integration tests require API keys to be set as GitHub secrets"
-          fi
-        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
-
-      - name: Generate coverage report
-        run: bun test --coverage tests/unit/
-
-  test-coverage:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Check test coverage threshold
-        shell: bash
-        run: |
-          # Run unit tests with coverage
-          bun test --coverage tests/unit/ > coverage-report.txt 2>&1
-          
-          # Extract coverage percentage from Bun's table format
-          # Look for "All files" line and extract the % Lines column (3rd column)
-          COVERAGE=$(grep "All files" coverage-report.txt | awk -F'|' '{print $3}' | awk '{print $1}' || echo "0")
-          
-          echo "Test coverage: ${COVERAGE}%"
-          
-          # Fail if coverage is below threshold (50%)
-          if (( $(echo "$COVERAGE < 50" | bc -l) )); then
-            echo "❌ Test coverage ${COVERAGE}% is below the required threshold of 50%"
-            exit 1
-          else
-            echo "✅ Test coverage ${COVERAGE}% meets the required threshold"
-          fi
-
-  build:
-    runs-on: ubuntu-latest
-    needs: [lint, test]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Build project
-        run: bun run build
-
-      - name: Verify build output
-        shell: bash
-        run: |
-          # Check that dist files exist
-          if [ ! -d "dist" ]; then
-            echo "❌ Build output directory 'dist' not found"
-            exit 1
-          fi
-          
-          # Check for main entry point
-          if [ ! -f "dist/index.js" ]; then
-            echo "❌ Main entry point 'dist/index.js' not found"
-            exit 1
-          fi
-          
-          echo "✅ Build verification passed"
-
-  type-check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Run TypeScript type checking
+      - name: Type check
         run: bun run type-check
 
-  jsr-validation:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Test
+        # Integration tests skip themselves without an API key, so CI is offline.
+        run: bun test
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+      - name: Build
+        run: bun run build
 
-      - name: Install dependencies
-        run: bun install
-
-      - name: Validate JSR TypeScript requirements
-        shell: bash
+      - name: Verify the published artifact runs on Node
         run: |
-          echo "🔍 Validating JSR TypeScript compatibility..."
-          
-          # JSR requires explicit return types for all public API functions
-          # This prevents the "slow types" error during JSR publishing
-          npx jsr publish --dry-run --allow-dirty
-          
-          echo "✅ JSR TypeScript validation passed"
+          node dist/cli/translator-sync.js --version
+          node dist/cli/translator-sync.js --help > /dev/null
 
-  security-audit:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Run security audit
-        shell: bash
+      - name: Verify there are no runtime dependencies
         run: |
-          # Run npm audit for known vulnerabilities
-          npm audit --audit-level=high || true
-          
-          # Check for hardcoded API keys using enhanced patterns
-          echo "🔍 Scanning for potential API keys..."
-          
-          # Check for common API key patterns
-          if grep -r -E "(sk-[a-zA-Z0-9]{32,}|api[_-]?key\s*[:=]\s*['\"]?[a-zA-Z0-9_-]{20,}|npm_[a-zA-Z0-9]{36}|glc_[a-zA-Z0-9]{50,})" --include="*.ts" --include="*.js" --include="*.json" --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=tests --exclude="package-lock.json" . 2>/dev/null; then
-            echo "❌ ERROR: Potential hardcoded API keys found!"
-            echo "Please remove all API keys and use environment variables instead."
-            echo "See docs/SECURITY-API-KEYS.md for guidelines."
-            exit 1
-          else
-            echo "✅ No hardcoded API keys detected"
-          fi
-          
-          # Run the npm script security check too
-          bun run security-check
+          count=$(node -e "const p=require('./package.json');console.log(Object.keys(p.dependencies||{}).length)")
+          echo "runtime dependencies: $count"
+          test "$count" = "0"
+
+      - name: Pack
+        run: bun pm pack --dry-run

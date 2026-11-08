@@ -1,4 +1,3 @@
-#!/usr/bin/env bun
 import fs from "node:fs";
 import path from "node:path";
 import { logger } from "../utils/logger.ts";
@@ -23,6 +22,9 @@ export interface TranslatorConfig {
   provider: "openai" | "deepseek" | "groq" | "mock";
   model?: string;
   apiKey?: string; // Can be in config or env var
+  baseURL?: string; // Any OpenAI-compatible endpoint: Nebius, OpenRouter, Ollama, vLLM
+  timeout?: number; // Per-request timeout in ms
+  maxRetries?: number; // Retries for 429 and 5xx
   primaryLanguage: string;
   directories: string[];
   filePattern?: string; // e.g., "translation.json" or "*.json"
@@ -103,6 +105,9 @@ export function loadConfig(configPath?: string): TranslatorConfig {
   }
   if (process.env.TRANSLATOR_API_KEY) {
     config.apiKey = process.env.TRANSLATOR_API_KEY;
+  }
+  if (process.env.TRANSLATOR_BASE_URL) {
+    config.baseURL = process.env.TRANSLATOR_BASE_URL;
   }
 
   // 3. Validate required fields

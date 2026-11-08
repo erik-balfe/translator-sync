@@ -1,4 +1,3 @@
-#!/usr/bin/env bun
 
 export type LogLevel = "debug" | "info" | "warn" | "error" | "silent";
 

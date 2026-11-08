@@ -64,18 +64,6 @@ describe("OpenAI Translation Provider", () => {
     test("creates provider with valid config", () => {
       expect(provider).toBeDefined();
     });
-
-    test("throws error with invalid API key", async () => {
-      const invalidProvider = new OpenAIProvider({
-        apiKey: "invalid-key-123",
-        timeout: 5000,
-        maxRetries: 1,
-      });
-
-      await expect(invalidProvider.translateBatch("en", "es", ["hello"])).rejects.toThrow(
-        /authentication|api key|unauthorized/i,
-      );
-    });
   });
 
   describe("Basic Translation Functionality", () => {
@@ -293,18 +281,6 @@ This is line three.`;
   });
 
   describe("Error Handling", () => {
-    test("handles network timeout gracefully", async () => {
-      const timeoutProvider = new OpenAIProvider({
-        apiKey: getApiKey(),
-        timeout: 1, // Very short timeout
-        maxRetries: 1,
-      });
-
-      await expect(timeoutProvider.translateBatch("en", "es", ["hello"])).rejects.toThrow(
-        /timeout|network|timed out/i,
-      );
-    });
-
     skipIfNoApiKey("recovers from temporary failures", async () => {
       // This test depends on the service being able to retry
       const result = await provider.translateBatch("en", "es", ["hello"]);

@@ -1,4 +1,3 @@
-#!/usr/bin/env bun
 
 /**
  * Provider-specific configuration defaults.
@@ -19,12 +18,6 @@ export const PROVIDER_DEFAULTS = {
   groq: {
     baseURL: "https://api.groq.com/openai/v1",
     model: "llama-3-8b-instant",
-    timeout: 30000,
-    maxRetries: 3,
-  },
-  anthropic: {
-    baseURL: "https://api.anthropic.com/v1",
-    model: "claude-3-haiku",
     timeout: 30000,
     maxRetries: 3,
   },
