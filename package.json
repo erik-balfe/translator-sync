@@ -32,7 +32,7 @@
   "main": "./dist/index.js",
   "exports": "./dist/index.js",
   "bin": {
-    "translator-sync": "./dist/cli/translator-sync.js"
+    "translator-sync": "dist/cli/translator-sync.js"
   },
   "files": [
     "dist",
