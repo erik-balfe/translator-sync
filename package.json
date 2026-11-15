@@ -24,8 +24,10 @@
     "ai",
     "openai"
   ],
-  "homepage": "https://github.com/erik-balfe/translator-sync",
-  "bugs": "https://github.com/erik-balfe/translator-sync/issues",
+  "homepage": "https://github.com/erik-balfe/translator-sync#readme",
+  "bugs": {
+    "url": "https://github.com/erik-balfe/translator-sync/issues"
+  },
   "license": "MIT",
   "author": "Erik Balfe",
   "type": "module",
@@ -63,5 +65,9 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/erik-balfe/translator-sync.git"
   }
 }
