@@ -20,16 +20,18 @@ jobs:
         with:
           bun-version: 1.4.4
 
-      # Trusted publishing needs Node >= 22.14.0 and npm >= 11.5.1.
+      # Trusted publishing needs npm >= 11.5.1 and Node >= 22.14.0. Node 24 is a
+      # baseline both repos share: npm@latest still supports it, and
+      # jsr publish refuses the versions whose crypto breaks Node 26.
       - uses: actions/setup-node@v4
         with:
-          node-version: "22.14.0"
+          node-version: "24"
           registry-url: "https://registry.npmjs.org"
           package-manager-cache: false
 
       - name: Upgrade npm for OIDC publishing
         run: |
-          npm install --global npm@latest
+          npm install --global npm@11
           npm --version
 
       - run: bun install --frozen-lockfile
